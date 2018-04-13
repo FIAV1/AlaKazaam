@@ -81,10 +81,10 @@ class NetworkHandler(HandlerInterface):
 		elif command == "LOGI":
 			pass
 
-		elif command == "ADDF":
+		elif command == "ADFF":
 			pass
 
-		elif command == "DELF":
+		elif command == "DEFF":
 			pass
 
 		elif command == "FIND":

@@ -7,7 +7,7 @@ from .handler import NetworkHandler, MenuHandler
 from .Menu import Menu
 from database import database
 
-DB_FILE = 'directory.db'
+DB_FILE = 'database/directory.db'
 
 
 def startup():

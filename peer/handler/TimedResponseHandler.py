@@ -6,7 +6,7 @@ from common.HandlerInterface import HandlerInterface
 from peer.LocalData import LocalData
 
 
-class ResponseHandler(HandlerInterface):
+class TimedResponseHandler(HandlerInterface):
 
 	def serve(self, sd: socket.socket) -> None:
 		""" Handle the peer request

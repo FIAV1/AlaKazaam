@@ -3,7 +3,7 @@
 from utils import net_utils, Logger, shell_colors as shell
 from .LocalData import LocalData
 from common.ServerThread import ServerThread
-from .handler import NetworkHandler, MenuHandler, ResponseHandler
+from .handler import NetworkHandler, MenuHandler, TimedResponseHandler
 from .Menu import Menu
 import uuid
 from threading import Timer
@@ -37,7 +37,7 @@ def startup():
 				continue
 
 			# 2) Attende ASUP per 20 sec
-			server = ServerThread(net_utils.get_network_port(), ResponseHandler.ResponseHandler())
+			server = ServerThread(net_utils.get_network_port(), TimedResponseHandler.ResponseHandler())
 			timer = Timer(20, lambda: server.stop())
 			server.start()
 			timer.start()

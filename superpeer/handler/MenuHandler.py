@@ -13,10 +13,10 @@ class MenuHandler:
 		if choice == "SUPE":
 			pass
 
-		elif choice == "ADDF":
+		elif choice == "ADFF":
 			pass
 
-		elif choice == "DELF":
+		elif choice == "DEFF":
 			pass
 
 		elif choice == "QUER":

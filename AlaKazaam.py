@@ -37,7 +37,9 @@ if __name__ == '__main__':
 		choice = input('Are you a super peer? (y/n): ')
 		if choice == 'y':
 			superpeer.startup()
+			break
 		elif choice == 'n':
 			peer.startup()
+			break
 		else:
 			shell.print_red('Input code is wrong. Choose y or n!\n')

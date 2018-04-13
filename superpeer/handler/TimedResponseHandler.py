@@ -5,7 +5,7 @@ from utils import shell_colors
 from common.HandlerInterface import HandlerInterface
 
 
-class ResponseHandler(HandlerInterface):
+class TimedResponseHandler(HandlerInterface):
 
 	def serve(self, sd: socket.socket) -> None:
 		""" Handle the peer request

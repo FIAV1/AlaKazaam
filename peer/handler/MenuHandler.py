@@ -10,10 +10,10 @@ class MenuHandler:
 		:return: None
 		"""
 
-		if choice == "ADDF":
+		if choice == "ADFF":
 			pass
 
-		elif choice == "DELF":
+		elif choice == "DEFF":
 			pass
 
 		elif choice == "FIND":
