@@ -13,6 +13,9 @@ class LocalData:
 	# 'pktid'
 	sent_packet = str()
 
+	# ('ipv4', 'ipv6', 'port', 'md5', 'filename')
+	peer_files = list()
+
 	# super_super_friends management --------------------------------------------------------
 	@classmethod
 	def is_super_friend(cls, ip4_peer: str, ip6_peer: str, port_peer: int) -> bool:
@@ -84,3 +87,49 @@ class LocalData:
 	def get_sent_packet(cls) -> str:
 		return cls.sent_packet
 	# -----------------------------------------------------------------------------
+
+	# peer_files management--------------------------------------------------------
+	@classmethod
+	def get_peer_files(cls) -> list:
+		return cls.peer_files
+
+	@classmethod
+	def get_file_owner_ip4(cls, file: tuple) -> str:
+		return file[0]
+
+	@classmethod
+	def get_file_owner_ip6(cls, file: tuple) -> str:
+		return file[1]
+
+	@classmethod
+	def get_file_owner_port(cls, file: tuple) -> int:
+		return file[2]
+
+	@classmethod
+	def get_file_md5(cls, file: tuple) -> str:
+		return file[3]
+
+	@classmethod
+	def get_file_name(cls, file: tuple) -> str:
+		return file[4]
+
+	@classmethod
+	def add_peer_files(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> None:
+		cls.peer_files.append((ip4_peer, ip6_peer, port_peer, filemd5, filename))
+
+	@classmethod
+	def exist_peer_files(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> bool:
+		return (ip4_peer, ip6_peer, port_peer, filemd5, filename) in cls.peer_files
+
+	@classmethod
+	def peer_file_index(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> int:
+		return cls.peer_files.index((ip4_peer, ip6_peer, port_peer, filemd5, filename))
+
+	@classmethod
+	def get_peer_file_by_index(cls, index: int) -> tuple:
+		return cls.peer_files.pop(index)
+
+	@classmethod
+	def clear_peer_files(cls) -> None:
+		cls.peer_files.clear()
+# -----------------------------------------------------------------------------
