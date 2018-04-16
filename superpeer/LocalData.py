@@ -5,7 +5,7 @@ class LocalData:
 	""" Data class containing data structures and methods to interact with them """
 
 	# ('ipv4', 'ipv6', 'port')
-	friends = list()
+	super_friends = list()
 
 	# {'pktid' : (ip, port)}
 	received_packets = dict()
@@ -13,28 +13,28 @@ class LocalData:
 	# 'pktid'
 	sent_packet = str()
 
-	# friends management --------------------------------------------------------
+	# super_super_friends management --------------------------------------------------------
 	@classmethod
-	def is_friend(cls, ip4_peer: str, ip6_peer: str, port_peer: int) -> bool:
-		return (ip4_peer, ip6_peer, port_peer) in cls.friends
+	def is_super_friend(cls, ip4_peer: str, ip6_peer: str, port_peer: int) -> bool:
+		return (ip4_peer, ip6_peer, port_peer) in cls.super_friends
 
 	@classmethod
-	def get_friends(cls) -> list:
-		return cls.friends
+	def get_super_friends(cls) -> list:
+		return cls.super_friends
 
 	@classmethod
-	def add_friend(cls, ip4_peer: str, ip6_peer: str, port_peer: int) -> None:
-		cls.friends.append((ip4_peer, ip6_peer, port_peer))
+	def add_super_friend(cls, ip4_peer: str, ip6_peer: str, port_peer: int) -> None:
+		cls.super_friends.append((ip4_peer, ip6_peer, port_peer))
 
 	@classmethod
-	def friend_index(cls, ip4_peer: str, ip6_peer: str, port_peer: int) -> int:
-		return cls.friends.index((ip4_peer, ip6_peer, port_peer))
+	def super_friend_index(cls, ip4_peer: str, ip6_peer: str, port_peer: int) -> int:
+		return cls.super_friends.index((ip4_peer, ip6_peer, port_peer))
 
 	@classmethod
-	def get_friends_recipients(cls, ip_sender: str, ip4_source: str, ip6_source: str) -> list:
-		recipients = cls.friends.copy()
+	def get_super_friends_recipients(cls, ip_sender: str, ip4_source: str, ip6_source: str) -> list:
+		recipients = cls.super_friends.copy()
 
-		for peer in cls.friends:
+		for peer in cls.super_friends:
 			if ip_sender == peer[0] or ip_sender == peer[1]:
 				recipients.remove(peer)
 
@@ -44,20 +44,20 @@ class LocalData:
 		return recipients
 
 	@classmethod
-	def get_friend_ip4(cls, peer: tuple) -> str:
+	def get_super_friend_ip4(cls, peer: tuple) -> str:
 		return peer[0]
 
 	@classmethod
-	def get_friend_ip6(cls, peer: tuple) -> str:
+	def get_super_friend_ip6(cls, peer: tuple) -> str:
 		return peer[1]
 
 	@classmethod
-	def get_friend_port(cls, peer: tuple) -> int:
+	def get_super_friend_port(cls, peer: tuple) -> int:
 		return peer[2]
 
 	@classmethod
-	def remove_friend(cls, friend_index: int) -> None:
-		cls.friends.pop(friend_index)
+	def remove_super_friend(cls, super_friend_index: int) -> None:
+		cls.super_friends.pop(super_friend_index)
 
 	# -----------------------------------------------------------------------------
 

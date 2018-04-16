@@ -96,7 +96,7 @@ def startup():
 
 	shell.print_green(f'Successfully logged to the superpeer: {super_ip4}|{super_ip6} [{super_port}]\n')
 
-	log = Logger.Logger('peer.log')
+	log = Logger.Logger('peer/peer.log')
 
 	server = ServerThread(net_utils.get_network_port(), NetworkHandler.NetworkHandler(log))
 	server.daemon = True

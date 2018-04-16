@@ -24,7 +24,7 @@ def startup():
 		LocalData.add_friend(ip4, ip6, port)
 		shell.print_green(f'\nSuccessfully added the new peer: {ip4}|{ip6} [{port}]\n')
 
-	log = Logger.Logger('superpeer.log')
+	log = Logger.Logger('superpeer/superpeer.log')
 
 	server = ServerThread(net_utils.get_network_port(), NetworkHandler.NetworkHandler(log))
 	server.daemon = True
