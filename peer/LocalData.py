@@ -15,6 +15,9 @@ class LocalData:
 	# ('ipv4', 'ipv6', 'port')
 	superpeer_candidates = list()
 
+	# ('file_name', 'file_md5')
+	files = list()
+
 	# friend management --------------------------------------------------------
 	@classmethod
 	def get_superpeer(cls) -> tuple:
@@ -59,4 +62,23 @@ class LocalData:
 	@classmethod
 	def get_sent_packet(cls) -> str:
 		return cls.sent_packet
+	# -----------------------------------------------------------------------------
+
+	# query management-------------------------------------------------------------
+	@classmethod
+	def get_files(cls) -> list:
+		return cls.files
+
+	@classmethod
+	def get_file_name(cls, file: tuple) -> str:
+		return file[0]
+
+	@classmethod
+	def get_file_md5(cls, file: tuple) -> str:
+		return file[1]
+
+	@classmethod
+	def add_file(cls, file_md5: str, file_name: str) -> None:
+		cls.files.clear()
+		cls.files.append((file_name, file_md5))
 	# -----------------------------------------------------------------------------
