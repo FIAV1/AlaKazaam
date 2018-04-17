@@ -139,11 +139,10 @@ class MenuHandler:
 			else:
 				for file in LocalData.get_peer_files():
 					print(f'\nFile found from network: {LocalData.peer_file_index(file[0], file[1], file[2], file[3], file[4])}')
-					shell.print_yellow(f' {LocalData.get_peer_file_md5(file)}')
-					print(f' {LocalData.get_peer_file_name(file)}'
-						f' from {LocalData.get_peer_file_ip4(file)|LocalData.get_peer_file_ip6(file)}'
-						f' on port {LocalData.get_peer_file_port(file)}')
-
+					shell.print_yellow(f' {LocalData.get_file_md5(file)}')
+					print(f' {LocalData.get_file_name(file)}'
+						f' from {LocalData.get_file_owner_ip4(file)|LocalData.get_file_owner_ip6(file)}'
+						f' on port {LocalData.get_file_owner_port(file)}')
 
 			try:
 				conn = database.get_connection('directory.db')
