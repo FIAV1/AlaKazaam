@@ -67,7 +67,7 @@ class LocalData:
 	# received packets management --------------------------------------------------
 	@classmethod
 	def add_received_packet(cls, pktid: str) -> None:
-		cls.received_packets = pktid
+		cls.received_packets.append(pktid)
 
 	@classmethod
 	def delete_received_packet(cls, pktid: str) -> None:
