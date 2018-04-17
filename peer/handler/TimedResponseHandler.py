@@ -14,12 +14,6 @@ class TimedResponseHandler(HandlerInterface):
 		:param sd: the socket descriptor used for read the request
 		:return None
 		"""
-		try:
-			command = sd.recv(4).decode()
-		except OSError as e:
-			shell.print_red(f'\nUnable to read the command from the socket: {e}\n')
-			sd.close()
-			return
 
 		try:
 			response = sd.recv(300).decode()
@@ -29,16 +23,18 @@ class TimedResponseHandler(HandlerInterface):
 			return
 		sd.close()
 
+		command = response[0:4]
+
 		if command == "ASUP":
 
-			if len(response) != 76:
+			if len(response) != 80:
 				shell.print_red(f"Invalid response: : {command} -> {response}. Expected: ASUP<pkt_id><ip_peer><port_peer>")
 				return
 
-			pktid = response[0:16]
-			ip_peer = response[16:71]
+			pktid = response[4:20]
+			ip_peer = response[20:75]
 			ip4_peer, ip6_peer = net_utils.get_ip_pair(ip_peer)
-			port_peer = int(response[71:76])
+			port_peer = int(response[75:80])
 
 			if pktid != LocalData.get_sent_packet():
 				return
