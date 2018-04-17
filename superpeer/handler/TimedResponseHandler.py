@@ -21,14 +21,16 @@ class TimedResponseHandler(HandlerInterface):
 			sd.close()
 			return
 
-		if command == "AQUE":
-			try:
-				response = sd.recv(300).decode()
-			except socket.error as e:
-				shell.print_red(f'Unable to read the {command} response from the socket: {e}\n')
-				sd.close()
-				return
+		try:
+			response = sd.recv(300).decode()
+		except socket.error as e:
+			shell.print_red(f'Unable to read the response from the socket: {e}\n')
+			shell.print_red(f"\nInvalid response: {command} -> {response}\n")
 			sd.close()
+			return
+		sd.close()
+
+		if command == "AQUE":
 
 			if len(response) != 212:
 				shell.print_red(f"Invalid response: : {command} -> {response}. Expected: AQUE<pkt_id><ip_peer><port_peer><file_md5><filename>")
@@ -48,13 +50,6 @@ class TimedResponseHandler(HandlerInterface):
 				LocalData.add_peer_files(ip4_peer, ip6_peer, port_peer, file_md5, filename)
 
 		elif command == "ASUP":
-			try:
-				response = sd.recv(300).decode()
-			except socket.error as e:
-				shell.print_red(f'Unable to read the {command} response from the socket: {e}\n')
-				sd.close()
-				return
-			sd.close()
 
 			if len(response) != 76:
 				shell.print_red(f"Invalid response: : {command} -> {response}. Expected: ASUP<pkt_id><ip_peer><port_peer>")
