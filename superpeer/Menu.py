@@ -22,12 +22,13 @@ class Menu:
 			print('| <2> Search other superpeers around you |')
 			print('| <3> Add a file                         |')
 			print('| <4> Delete a file                      |')
-			print('| <5> List your known peers              |')
-			print('| <6> List all files                     |')
+			print('| <5> List your known superpeers              |')
+			print('| <6> List your known peers')
+			print('| <7> List all files                     |')
 			print('------------------------------------------')
 			choice = input('Select an option (q to exit): ')
 
-			if choice in {'1', '2', '3', '4', '5', '6'}:
+			if choice in {'1', '2', '3', '4', '5', '6', '7'}:
 				if choice == '1':
 					command = "QUER"
 				elif choice == '2':
@@ -37,8 +38,10 @@ class Menu:
 				elif choice == '4':
 					command = "DEFF"
 				elif choice == '5':
-					command = "LISTPEERS"
+					command = "LISTSUPERPEERS"
 				elif choice == '6':
+					command = "LISTPEERS"
+				elif choice == '7':
 					command = "LISTFILES"
 
 				self.handler.serve(command)
