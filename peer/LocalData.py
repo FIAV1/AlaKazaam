@@ -87,4 +87,12 @@ class LocalData:
 			if file[0] == file_md5:
 				return True
 		return False
+
+	@classmethod
+	def find_shared_file(cls, index: int) -> tuple:
+		return cls.shared_files[index]
+
+	@classmethod
+	def remove_shared_file(cls, file: tuple) -> None:
+		cls.shared_files.remove(file)
 	# -----------------------------------------------------------------------------
