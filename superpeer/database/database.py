@@ -2,14 +2,17 @@
 
 import sqlite3
 from sqlite3 import Error
+from sqlite3 import DatabaseError
 import os.path
 
 
 def exist(db_filename: str) -> bool:
 	""" Check if the given db exist
 
-	:param: db_filename: the db filename
-	:return: bool - True or False either if exists or not
+	Parameters:
+		db_filename: the db filename
+	Returns:
+		bool - True or False either if exists or not
 	"""
 	if os.path.exists(db_filename):
 		return True
@@ -19,7 +22,8 @@ def exist(db_filename: str) -> bool:
 def create_database(db_filename: str) -> None:
 	""" Create a sqlite db file with the structure defined in the 'schema.sql' file
 
-	:param: db_filename: the db filename
+	Parameters:
+		db_filename: the db filename
 	"""
 	try:
 		db_file = open(db_filename, "w+")
@@ -53,8 +57,10 @@ def create_database(db_filename: str) -> None:
 def reset_database(db_filename: str) -> bool:
 	""" Refresh the tables of the database
 
-	:param: db_filename: the db filename
-	:return: bool - True or False either if succeeds or fails
+	Parameters:
+		db_filename: the db filename
+	Returns:
+		bool - True or False either if succeeds or fails
 	"""
 	try:
 		sqlscript = open('database/reset.sql', 'r')
@@ -108,13 +114,15 @@ def fill_seeds(db_filename: str) -> bool:
 
 
 def get_connection(db_filename: str) -> sqlite3.Connection:
-	""" Create a database connection to the given SQLite database
+	""" create a database connection to the given SQLite database
 
-	:param: db_filename: the db filename
-	:return: Connection - Connection object or None
+	Parameters:
+		db_filename: the db filename
+	Returns:
+		Connection - Connection object or None
 	"""
 	try:
 		return sqlite3.connect(db_filename)
+
 	except Error as e:
-		print(e)
-		exit(0)
+		raise e
