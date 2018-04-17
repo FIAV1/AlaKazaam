@@ -25,7 +25,6 @@ class TimedResponseHandler(HandlerInterface):
 			response = sd.recv(300).decode()
 		except socket.error as e:
 			shell.print_red(f'Unable to read the response from the socket: {e}\n')
-			shell.print_red(f"\nInvalid response: {command} -> {response}\n")
 			sd.close()
 			return
 		sd.close()
@@ -47,8 +46,6 @@ class TimedResponseHandler(HandlerInterface):
 			LocalData.add_superpeer_candidate(ip4_peer, ip6_peer, port_peer)
 
 		else:
-			wrong_response = sd.recv(300).decode()
-			sd.close()
-			shell.print_red(f"\nInvalid response: {command} -> {wrong_response}\n")
+			shell.print_red(f"\nInvalid response: {command} -> {response}\n")
 
 		return
