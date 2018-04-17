@@ -15,42 +15,21 @@ class MenuHandler:
 		"""
 
 		if choice == "ADFF":
-			# scansiona la dir shared per trovare tutti i file
-			shell.print_blue('\nFiles in shared:')
-			for count, file in enumerate(os.scandir('shared'), start=1):
-				# aggiunge i file alla struttura dati
+			for file in os.scandir('shared'):
 				file_md5 = hasher.get_md5(f'shared/{file.name}')
-				LocalData.add_shared_file(file_md5, file.name)
-				# stampa i risultati
-				print(f'{count}] {file.name} | {file_md5}')
+				# verifica se il file è gia presente nella struttura dati
+				present = LocalData.is_shared_file(file_md5)
 
-			files = LocalData.get_shared_files()
+				if not present:
+					# aggiunge il file alla struttura dati se non già presente
+					LocalData.add_shared_file((file_md5, file.name))
+					shell.print_blue(f'\nNew shared file added {file.name} | {file_md5}')
 
-			while True:
-				index = input('\nChoose the file to be added: ')
-				try:
-					index = int(index) - 1
-				except ValueError:
-					shell.print_red(f'\nWrong index: number in range 1 - {len(files)} expected.\n')
-					continue
-
-				if 1 <= index <= len(files):
-					# invia il pacchetto al supernodo ed esce dal ciclo
-					packet = choice + \
-							LocalData.session_id + \
-							LocalData.get_shared_file_md5(files[index]) + \
-							LocalData.get_shared_file_name(files[index]).ljust(100)
-
-					net_utils.send_packet_and_close(LocalData.get_superpeer_ip4(),
-													LocalData.get_superpeer_ip6(),
-													LocalData.get_superpeer_port(),
-													packet)
-
-					shell.print_green(f'\nPacket sent to Supernode {LocalData.get_superpeer_ip4()}|{LocalData.get_superpeer_ip6()} [{LocalData.get_superpeer_port()}]\n')
-					break
-				else:
-					shell.print_red(f'\nWrong index: number in range 1 - {len(files)} expected.\n')
-					continue
+					# crea il pacchetto e lo invia al super peer
+					packet = choice + LocalData.session_id + file_md5 + file.name.ljust(100)
+					net_utils.send_packet_and_close(LocalData.get_superpeer_ip4(), LocalData.get_superpeer_ip6(), LocalData.get_superpeer_port(), packet)
+					shell.print_green(f'Packet sent to Supernode {LocalData.get_superpeer_ip4()}|{LocalData.get_superpeer_ip6()} [{LocalData.get_superpeer_port()}]')
+				# TODO verificare se necessario aggiungere i file contenuti in shared allo startup del peer
 
 		elif choice == "DEFF":
 			pass

@@ -79,6 +79,12 @@ class LocalData:
 
 	@classmethod
 	def add_shared_file(cls, file_md5: str, file_name: str) -> None:
-		cls.shared_files.clear()
 		cls.shared_files.append((file_name, file_md5))
+
+	@classmethod
+	def is_shared_file(cls, file_md5: str) -> bool:
+		for file in cls.shared_files:
+			if file[0] == file_md5:
+				return True
+		return False
 	# -----------------------------------------------------------------------------
