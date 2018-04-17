@@ -56,6 +56,8 @@ class NetworkHandler(HandlerInterface):
 		# log the packet received
 		socket_ip_sender = sd.getpeername()[0]
 		socket_port_sender = sd.getpeername()[1]
+		sd.close()
+
 		self.log.write_green(f'{socket_ip_sender} [{socket_port_sender}] -> ', end='')
 		self.log.write(f'{packet}')
 
@@ -71,7 +73,6 @@ class NetworkHandler(HandlerInterface):
 			ip_peer = packet[20:75]
 			port_peer = int(packet[75:80])
 			ttl = packet[80:82]
-			sd.close()
 
 			# packet management
 			if pktid == LocalData.get_sent_packet():
