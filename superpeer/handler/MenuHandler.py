@@ -7,9 +7,10 @@ from superpeer.model import peer_repository, file_repository
 
 db_file = 'directory.db'
 
+
 class MenuHandler:
 
-	def serve(self, choice: str) -> None:
+	def serve(self, choice: str) -> str:
 		""" Handle the peer packet
 
 		:param choice: the choice to handle
@@ -55,7 +56,7 @@ class MenuHandler:
 				if peer_list is None:
 					shell.print_red('You do not know any peers.')
 					conn.close()
-					return
+
 				else:
 					for count, peer_row in enumerate(peer_list, start=1):
 						shell.print_blue(f'{count}]' + peer_row['ip'] + peer_row['port'] + '\n')
@@ -81,7 +82,7 @@ class MenuHandler:
 				if files is None:
 					shell.print_red('You do not have any files.')
 					conn.close()
-					return
+
 				else:
 					for count, file_row in enumerate(files, start=1):
 						peer_list = peer_repository.get_peers_by_file(conn, file_row['file_md5'])
