@@ -12,6 +12,9 @@ class LocalData:
 	# 'pktid'
 	sent_packet = str()
 
+	# 'pktid'
+	received_packets = list()
+
 	# ('ipv4', 'ipv6', 'port')
 	superpeer_candidates = list()
 
@@ -59,4 +62,18 @@ class LocalData:
 	@classmethod
 	def get_sent_packet(cls) -> str:
 		return cls.sent_packet
+	# -----------------------------------------------------------------------------
+
+	# received packets management --------------------------------------------------
+	@classmethod
+	def add_received_packet(cls, pktid: str) -> None:
+		cls.received_packets.append(pktid)
+
+	@classmethod
+	def delete_received_packet(cls, pktid: str) -> None:
+		cls.received_packets.remove(pktid)
+
+	@classmethod
+	def exist_in_received_packets(cls, pktid: str) -> bool:
+		return pktid in cls.received_packets
 	# -----------------------------------------------------------------------------
