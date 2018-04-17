@@ -16,7 +16,7 @@ class LocalData:
 	superpeer_candidates = list()
 
 	# ('file_name', 'file_md5')
-	files = list()
+	shared_files = list()
 
 	# friend management --------------------------------------------------------
 	@classmethod
@@ -66,19 +66,19 @@ class LocalData:
 
 	# query management-------------------------------------------------------------
 	@classmethod
-	def get_files(cls) -> list:
-		return cls.files
+	def get_shared_files(cls) -> list:
+		return cls.shared_files
 
 	@classmethod
-	def get_file_name(cls, file: tuple) -> str:
+	def get_shared_file_name(cls, file: tuple) -> str:
 		return file[0]
 
 	@classmethod
-	def get_file_md5(cls, file: tuple) -> str:
+	def get_shared_file_md5(cls, file: tuple) -> str:
 		return file[1]
 
 	@classmethod
-	def add_file(cls, file_md5: str, file_name: str) -> None:
-		cls.files.clear()
-		cls.files.append((file_name, file_md5))
+	def add_shared_file(cls, file_md5: str, file_name: str) -> None:
+		cls.shared_files.clear()
+		cls.shared_files.append((file_name, file_md5))
 	# -----------------------------------------------------------------------------
