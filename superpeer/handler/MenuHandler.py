@@ -10,7 +10,7 @@ db_file = 'directory.db'
 
 class MenuHandler:
 
-	def serve(self, choice: str) -> str:
+	def serve(self, choice: str) -> None:
 		""" Handle the peer packet
 
 		:param choice: the choice to handle
@@ -33,6 +33,9 @@ class MenuHandler:
 
 			shell.print_green('\nList of known peers:')
 
+			if not LocalData.get_super_friends():
+				shell.print_red('You do not know any superpeers.')
+
 			for count, friend in enumerate(LocalData.get_super_friends(), start=1):
 				friend_ip4 = LocalData.get_super_friend_ip4(friend)
 				friend_ip6 = LocalData.get_super_friend_ip6(friend)
@@ -48,12 +51,13 @@ class MenuHandler:
 
 			except database.Error as e:
 				print(f'Error: {e}')
-				return "The server has encountered an error while trying to serve the request."
+				print('The server has encountered an error while trying to serve the request.')
+				return
 
 			try:
 				peer_list = peer_repository.find_all(conn)
 
-				if peer_list is None:
+				if not peer_list:
 					shell.print_red('You do not know any peers.')
 					conn.close()
 
@@ -65,7 +69,8 @@ class MenuHandler:
 				conn.rollback()
 				conn.close()
 				print(f'Error: {e}')
-				return "The server has encountered an error while trying to serve the request."
+				print('The server has encountered an error while trying to serve the request.')
+				return
 
 		elif choice == "LISTFILES":
 			try:
@@ -74,12 +79,13 @@ class MenuHandler:
 
 			except database.Error as e:
 				print(f'Error: {e}')
-				return "The server has encountered an error while trying to serve the request."
+				print('The server has encountered an error while trying to serve the request.')
+				return
 
 			try:
 				files = file_repository.find_all(conn)
 
-				if files is None:
+				if not files:
 					shell.print_red('You do not have any files.')
 					conn.close()
 
@@ -99,7 +105,8 @@ class MenuHandler:
 				conn.rollback()
 				conn.close()
 				print(f'Error: {e}')
-				return "The server has encountered an error while trying to serve the request."
+				print('The server has encountered an error while trying to serve the request.')
+				return
 
 		else:
 			pass
