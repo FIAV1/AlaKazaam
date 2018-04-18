@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-from utils import net_utils, shell_colors as shell
+from utils import net_utils, hasher, shell_colors as shell
 from utils.Downloader import Downloader
 import uuid
+import os
 from superpeer.LocalData import LocalData
 from common.ServerThread import ServerThread
 from superpeer.handler.TimedResponseHandler import TimedResponseHandler
@@ -85,7 +86,54 @@ class MenuHandler:
 						f' {superfriend_ip4}|{superfriend_ip6} on port {superfriend_port}')
 
 		elif choice == "ADFF":
-			pass
+
+			if not os.path.exists('shared'):
+				shell.print_red('\nCannot find the shared folder')
+				return
+
+			dir_file = list()
+
+			while True:
+
+				for count, dir_entry in enumerate(os.scandir('shared'), 1):
+					dir_file.append((dir_entry.name, hasher.get_md5(dir_entry.path), dir_entry.stat().st_size))
+					print(f'\n{count}) {dir_entry.name}')
+					shell.print_yellow(f' {hasher.get_md5(dir_entry.path)}')
+					print(f' size: {dir_entry.stat().st_size}')
+
+				if count == 0:
+					shell.print_yellow('\nNo file in the shared folder.')
+					return
+
+				index = input('\nPlease select a file to share(pres q to exit): ')
+
+				if index == 'q':
+					print('\n')
+					dir_file.clear()
+					return
+
+				try:
+					index = int(index) - 1
+				except ValueError:
+					shell.print_red(f'\nWrong index: number in range 1 - {count} expected.')
+					dir_file.clear()
+					continue
+
+				if 0 <= index <= count - 1:
+					chosen_file = dir_file.pop(index)
+
+					filename = LocalData.get_shared_filename(chosen_file)
+					filemd5 = LocalData.get_shared_filemd5(chosen_file)
+					filedim = LocalData.get_shared_dim(chosen_file)
+
+					LocalData.add_shared_file(filename, filemd5, filedim)
+
+					dir_file.clear()
+
+					break
+				else:
+					shell.print_red(f'\nWrong index: number in range 1 - {i} expected.')
+				continue
 
 		elif choice == "DEFF":
 			pass
@@ -206,7 +254,7 @@ class MenuHandler:
 
 				if index == 'q':
 					print('\n')
-					# TODO clear_list?
+					LocalData.clear_peer_files()
 					return
 
 				try:

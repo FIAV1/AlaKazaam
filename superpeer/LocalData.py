@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import re
 
 class LocalData:
 	""" Data class containing data structures and methods to interact with them """
@@ -15,6 +16,9 @@ class LocalData:
 
 	# ('ipv4', 'ipv6', 'port', 'md5', 'filename')
 	peer_files = list()
+
+	# ('filename', 'md5', 'dim')
+	shared_files = list()
 
 	# super_super_friends management --------------------------------------------------------
 	@classmethod
@@ -132,4 +136,44 @@ class LocalData:
 	@classmethod
 	def clear_peer_files(cls) -> None:
 		cls.peer_files.clear()
-# -----------------------------------------------------------------------------
+	# -----------------------------------------------------------------------------
+
+	# shared files management -----------------------------------------------------
+	@classmethod
+	def add_shared_file(cls, filename: str, file_md5: str, file_size: int) -> None:
+		cls.shared_files.append((filename, file_md5, file_size))
+
+	@classmethod
+	def search_in_shared_files(cls, query_name: str) -> list:
+		results = list()
+		for file in cls.shared_files:
+			if re.search(query_name, file[0].lower()):
+				results.append(file)
+		return results
+
+	@classmethod
+	def get_shared_filename_by_filemd5(cls, file_md5: str) -> str:
+		for file in cls.shared_files:
+			if file[1] == file_md5:
+				return file[0]
+
+	@classmethod
+	def get_shared_filename(cls, file: tuple) -> str:
+		return file[0]
+
+	@classmethod
+	def get_shared_filemd5(cls, file: tuple) -> str:
+		return file[1]
+
+	@classmethod
+	def get_shared_dim(cls, file: tuple) -> int:
+		return int(file[2])
+
+	@classmethod
+	def clear_shared_files(cls) -> None:
+		cls.shared_files.clear()
+
+	@classmethod
+	def get_shared_file_by_index(cls, index: int) -> tuple:
+		return cls.shared_files.pop(index)
+	# -----------------------------------------------------------------------------
