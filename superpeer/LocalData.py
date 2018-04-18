@@ -144,6 +144,10 @@ class LocalData:
 		cls.shared_files.append((filename, file_md5, file_size))
 
 	@classmethod
+	def exist_shared_file(cls, filename: str, file_md5: str, file_size: int) -> bool:
+		return (filename, file_md5, file_size) in cls.shared_files
+
+	@classmethod
 	def search_in_shared_files(cls, query_name: str) -> list:
 		results = list()
 		for file in cls.shared_files:

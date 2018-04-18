@@ -126,7 +126,11 @@ class MenuHandler:
 					filemd5 = LocalData.get_shared_filemd5(chosen_file)
 					filedim = LocalData.get_shared_dim(chosen_file)
 
-					LocalData.add_shared_file(filename, filemd5, filedim)
+					if not LocalData.exist_shared_file(filename, filemd5, filedim):
+						LocalData.add_shared_file(filename, filemd5, filedim)
+						shell.print_green('\nThe file is now shared')
+					else:
+						shell.print_yellow('\nThe file is already shared')
 
 					dir_file.clear()
 
