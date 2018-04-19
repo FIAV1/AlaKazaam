@@ -4,6 +4,7 @@ from utils import net_utils, hasher, shell_colors as shell
 from utils.Downloader import Downloader
 import uuid
 import os
+from socket import socket
 from superpeer.LocalData import LocalData
 from common.ServerThread import ServerThread
 from superpeer.handler.TimedResponseHandler import TimedResponseHandler
@@ -23,11 +24,17 @@ class MenuHandler:
 		superfriends = LocalData.get_super_friends()
 
 		for superfriend in superfriends:
-			net_utils.send_packet_and_close(
-				LocalData.get_super_friend_ip4(superfriend),
-				LocalData.get_super_friend_ip6(superfriend),
-				LocalData.get_super_friend_port(superfriend),
-				packet)
+
+			try:
+				net_utils.send_packet_and_close(
+					LocalData.get_super_friend_ip4(superfriend),
+					LocalData.get_super_friend_ip6(superfriend),
+					LocalData.get_super_friend_port(superfriend),
+					packet)
+			except socket.error as e:
+				shell.print_red(f'\nUnable to send the packet on the socket: {e}')
+				return
+
 
 	def serve(self, choice: str) -> None:
 		""" Handle the peer packet
@@ -75,7 +82,7 @@ class MenuHandler:
 				server.join()
 
 			if len(LocalData.get_super_friends()) == old_superfriends_len:
-				shell.print_red('\nNo new superpeer found.\n')
+				shell.print_yellow('\nNo new superpeer found.\n')
 
 		elif choice == "ADFF":
 
@@ -131,7 +138,42 @@ class MenuHandler:
 				continue
 
 		elif choice == "DEFF":
-			pass
+
+			for count, file in enumerate(LocalData.get_shared_files()):
+				print(f'\n{count}) {LocalData.get_shared_filename(file)}')
+				shell.print_yellow(f' {LocalData.get_shared_filemd5(file)}')
+				print(f' size: {LocalData.get_shared_dim(file)}')
+
+			if count == 0:
+				shell.print_yellow('\nNo file in sharing.')
+				return
+
+			while True:
+
+				index = input('\nPlease select a file to delete from sharing(pres q to exit): ')
+
+				if index == 'q':
+					print('\n')
+					return
+
+				try:
+					index = int(index) - 1
+				except ValueError:
+					shell.print_red(f'\nWrong index: number in range 1 - {count} expected.')
+					continue
+
+				if 0 <= index <= count - 1:
+
+					deleted_file = LocalData.get_shared_file_by_index(index)
+
+					shell.print_blue(f'\n{LocalData.get_shared_filename(deleted_file)}')
+					shell.print_yellow(f' {LocalData.get_shared_filemd5(deleted_file)}')
+					shell.print_blue(' removed from sharing.')
+
+					break
+				else:
+					shell.print_red(f'\nWrong index: number in range 1 - {count} expected.')
+				continue
 
 		elif choice == "QUER":
 
@@ -190,7 +232,7 @@ class MenuHandler:
 			pktid = str(uuid.uuid4().hex[:16].upper())
 			ip = net_utils.get_local_ip_for_response()
 			port = net_utils.get_aque_port()
-			ttl = '5'
+			ttl = '05'
 
 			packet = choice + pktid + ip + str(port).zfill(5) + ttl + search.ljust(20)
 			LocalData.set_sent_quer_packet(pktid)

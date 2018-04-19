@@ -140,6 +140,10 @@ class LocalData:
 
 	# shared files management -----------------------------------------------------
 	@classmethod
+	def get_shared_files(cls) -> list:
+		return cls.shared_files
+
+	@classmethod
 	def add_shared_file(cls, filename: str, file_md5: str, file_size: int) -> None:
 		cls.shared_files.append((filename.lower(), file_md5, file_size))
 
