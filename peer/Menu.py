@@ -23,7 +23,7 @@ class Menu:
 			print('| <3> Delete a shared file        |')
 			print('| <4> Show your superpeer         |')
 			print('-----------------------------------')
-			choice = input('Select an option (q to exit): ')
+			choice = input('Select an option (q to logout): ')
 
 			if choice in {'1', '2', '3', '4'}:
 				if choice == '1':
@@ -39,4 +39,5 @@ class Menu:
 			elif choice != 'q':
 				shell_colors.print_red('Input code is wrong. Choose one action!\n')
 
+		self.handler.serve('LOGO')
 		shell_colors.print_blue('\nBye!\n')
