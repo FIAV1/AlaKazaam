@@ -15,13 +15,16 @@ class LocalData:
 	# 'pktid'
 	sent_packet = str()
 
+	# 'pktid'
+	received_packets = list()
+
 	# ('ipv4', 'ipv6', 'port')
 	superpeer_candidates = list()
 
 	# ('file_name', 'file_md5')
 	shared_files = list()
 
-	# friend management --------------------------------------------------------
+	# friend management ------------------------------------------------------------
 	@classmethod
 	def get_superpeer(cls) -> tuple:
 		return cls.superpeer
@@ -43,7 +46,7 @@ class LocalData:
 		return cls.superpeer[2]
 	# -----------------------------------------------------------------------------
 
-	# superpeer_candidates management --------------------------------------------------------
+	# superpeer_candidates management ---------------------------------------------
 	@classmethod
 	def get_superpeer_candidates(cls) -> list:
 		return cls.superpeer_candidates
@@ -106,4 +109,18 @@ class LocalData:
 	def clear_shared_files(cls) -> None:
 		data = {"files": [], "superpeer": []}
 		json.dump(data, open("peer/data.json", "w"))
+  # ------------------------------------------------------------------------------
+  
+  # received packets management --------------------------------------------------
+	@classmethod
+	def add_received_packet(cls, pktid: str) -> None:
+		cls.received_packets.append(pktid)
+
+	@classmethod
+	def delete_received_packet(cls, pktid: str) -> None:
+		cls.received_packets.remove(pktid)
+
+	@classmethod
+	def exist_in_received_packets(cls, pktid: str) -> bool:
+		return pktid in cls.received_packets
 	# -----------------------------------------------------------------------------
