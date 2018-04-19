@@ -26,6 +26,21 @@ def find(conn: database.sqlite3.Connection, session_id: str) -> 'Peer':
 	return peer
 
 
+def find_all(conn: database.sqlite3.Connection) -> list():
+	""" Retrieve all the peers
+
+	Parameters:
+		conn - the db connection
+	Returns:
+		list - all the peers
+	"""
+	c = conn.cursor()
+	c.execute('SELECT * FROM peers')
+	peer_rows = c.fetchall()
+
+	return peer_rows
+
+
 def find_by_ip(conn: database.sqlite3.Connection, ip: str) -> 'Peer':
 	""" Retrieve the peer with the given session_id
 
@@ -46,6 +61,7 @@ def find_by_ip(conn: database.sqlite3.Connection, ip: str) -> 'Peer':
 	peer = Peer(row['session_id'], ip, row['port'])
 
 	return peer
+
 
 def file_unlink(conn: database.sqlite3.Connection, session_id: str, file_md5: str) -> bool:
 	""" Unlink the peer with the given session_id from the file

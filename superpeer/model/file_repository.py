@@ -39,6 +39,21 @@ def find(conn: database.sqlite3.Connection, file_md5: str) -> 'File':
 	return file
 
 
+def find_all(conn: database.sqlite3.Connection) -> list():
+	""" Retrieve all the files
+
+	Parameters:
+		conn - the db connection
+	Returns:
+		list - all the files
+	"""
+	c = conn.cursor()
+	c.execute('SELECT * FROM files')
+	files_rows = c.fetchall()
+
+	return files_rows
+
+
 def peer_has_file(conn: database.sqlite3.Connection, session_id: str, file_md5: str) -> bool:
 	""" Check if the peer with the given session_id actually own the file with the given md5
 
