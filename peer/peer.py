@@ -37,7 +37,7 @@ def startup():
 				continue
 
 			# 2) Attende ASUP per 20 sec
-			server = ServerThread(net_utils.get_network_port(), TimedResponseHandler.ResponseHandler())
+			server = ServerThread(net_utils.get_network_port(), TimedResponseHandler.TimedResponseHandler())
 			timer = Timer(20, lambda: server.stop())
 			server.start()
 			timer.start()

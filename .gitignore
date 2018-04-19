@@ -103,6 +103,9 @@ ENV/
 # Pycharm
 .idea
 
+# Mac
+*.DS_Store
+
 # Local testing
 /test
 
