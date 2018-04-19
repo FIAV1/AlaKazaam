@@ -342,7 +342,7 @@ class MenuHandler:
 						f'{count}] {friend_ip4} {friend_ip6} {str(friend_port)}')
 
 		elif choice == "LISTPEERS":
-      
+
 			try:
 				conn = database.get_connection(db_file)
 				conn.row_factory = database.sqlite3.Row
