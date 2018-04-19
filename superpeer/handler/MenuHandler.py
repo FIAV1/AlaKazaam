@@ -36,7 +36,7 @@ class MenuHandler:
 			if not LocalData.get_super_friends():
 				shell.print_red('You do not know any superpeers.')
 			else:
-				for count, friend in enumerate(LocalData.get_super_friends(), start=1):
+				for count, friend in enumerate(LocalData.get_super_friends(), 1):
 					friend_ip4 = LocalData.get_super_friend_ip4(friend)
 					friend_ip6 = LocalData.get_super_friend_ip6(friend)
 					friend_port = LocalData.get_super_friend_port(friend)
@@ -60,9 +60,10 @@ class MenuHandler:
 				if not peer_list:
 					shell.print_red('You do not know any peers.')
 					conn.close()
+					return
 
 				else:
-					for count, peer_row in enumerate(peer_list, start=1):
+					for count, peer_row in enumerate(peer_list, 1):
 						shell.print_blue(f'{count}]' + peer_row['ip'] + peer_row['port'] + '\n')
 
 			except database.Error as e:
@@ -88,21 +89,18 @@ class MenuHandler:
 				if not files:
 					shell.print_red('You do not have any files.')
 					conn.close()
+					return
 
 				else:
-					for count, file_row in enumerate(files, start=1):
-						peer_list = peer_repository.get_peers_by_file(conn, file_row['file_md5'])
-						print('Logged peers files:\n')
-						shell.print_green(f'{count}]' + file_row['file_md5'] + file_row['file_name'] + ':')
-						print('(')
-						for peer_row in peer_list:
-							peer_ip = peer_row['ip']
-							peer_port = peer_row['port']
-							print(f'{peer_ip} [{peer_port}]; ')
-						print(')\n')
-					print('Your shared files:\n')
-					for count, file_shared in LocalData.shared_files:
-						shell.print_green(f'{count}]' + file_shared(1) + file_shared(0))
+
+					for count, file_row in enumerate(files, 1):
+						print('\nLogged peers files:')
+						shell.print_green(f'{count}] {file_row["file_name"]}|{file_row["file_md5"]}:')
+
+					print('\nYour shared files:')
+					for count, shared_file in enumerate(LocalData.get_shared_files(), 1):
+						shell.print_green(
+							f'{count}] {LocalData.get_shared_file_name(shared_file)}|{LocalData.get_shared_file_md5(shared_file)}\n')
 
 			except database.Error as e:
 				conn.rollback()
