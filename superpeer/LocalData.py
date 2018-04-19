@@ -141,7 +141,7 @@ class LocalData:
 	# shared files management -----------------------------------------------------
 	@classmethod
 	def add_shared_file(cls, filename: str, file_md5: str, file_size: int) -> None:
-		cls.shared_files.append((filename, file_md5, file_size))
+		cls.shared_files.append((filename.lower(), file_md5, file_size))
 
 	@classmethod
 	def exist_shared_file(cls, filename: str, file_md5: str, file_size: int) -> bool:
@@ -151,7 +151,7 @@ class LocalData:
 	def search_in_shared_files(cls, query_name: str) -> list:
 		results = list()
 		for file in cls.shared_files:
-			if re.search(query_name, file[0].lower()):
+			if re.search(query_name, file[0]):
 				results.append(file)
 		return results
 

@@ -44,7 +44,7 @@ class MenuHandler:
 			ttl = '04'
 
 			packet = choice + pktid + ip + str(port).zfill(5) + ttl
-			LocalData.set_sent_packet(pktid)
+			LocalData.set_sent_supe_packet(pktid)
 
 			old_superfriends_len = len(LocalData.get_super_friends())
 
@@ -76,34 +76,26 @@ class MenuHandler:
 
 			if len(LocalData.get_super_friends()) == old_superfriends_len:
 				shell.print_red('\nNo new superpeer found.\n')
-			else:
-				for friend in LocalData.get_super_friends():
-					superfriend_ip4 = LocalData.get_super_friend_ip4(friend)
-					superfriend_ip6 = LocalData.get_super_friend_ip6(friend)
-					superfriend_port = LocalData.get_super_friend_port(friend)
-					shell.print_green(
-						f'\nNew superpeer found: {LocalData.super_friend_index(superfriend_ip4,superfriend_ip6,superfriend_port)})' 
-						f' {superfriend_ip4}|{superfriend_ip6} on port {superfriend_port}')
 
 		elif choice == "ADFF":
 
 			if not os.path.exists('shared'):
-				shell.print_red('\nCannot find the shared folder')
+				shell.print_red('\nCannot find the shared folder.')
 				return
 
 			dir_file = list()
 
+			for count, dir_entry in enumerate(os.scandir('shared'), 1):
+				dir_file.append((dir_entry.name, hasher.get_md5(dir_entry.path), dir_entry.stat().st_size))
+				print(f'\n{count}) {dir_entry.name}')
+				shell.print_yellow(f' {hasher.get_md5(dir_entry.path)}')
+				print(f' size: {dir_entry.stat().st_size}')
+
+			if count == 0:
+				shell.print_yellow('\nNo file in the shared folder.')
+				return
+
 			while True:
-
-				for count, dir_entry in enumerate(os.scandir('shared'), 1):
-					dir_file.append((dir_entry.name, hasher.get_md5(dir_entry.path), dir_entry.stat().st_size))
-					print(f'\n{count}) {dir_entry.name}')
-					shell.print_yellow(f' {hasher.get_md5(dir_entry.path)}')
-					print(f' size: {dir_entry.stat().st_size}')
-
-				if count == 0:
-					shell.print_yellow('\nNo file in the shared folder.')
-					return
 
 				index = input('\nPlease select a file to share(pres q to exit): ')
 
@@ -116,7 +108,6 @@ class MenuHandler:
 					index = int(index) - 1
 				except ValueError:
 					shell.print_red(f'\nWrong index: number in range 1 - {count} expected.')
-					dir_file.clear()
 					continue
 
 				if 0 <= index <= count - 1:
@@ -128,15 +119,15 @@ class MenuHandler:
 
 					if not LocalData.exist_shared_file(filename, filemd5, filedim):
 						LocalData.add_shared_file(filename, filemd5, filedim)
-						shell.print_green('\nThe file is now shared')
+						shell.print_green('\nThe file is now shared.')
 					else:
-						shell.print_yellow('\nThe file is already shared')
+						shell.print_yellow('\nThe file is already shared.')
 
 					dir_file.clear()
 
 					break
 				else:
-					shell.print_red(f'\nWrong index: number in range 1 - {i} expected.')
+					shell.print_red(f'\nWrong index: number in range 1 - {count} expected.')
 				continue
 
 		elif choice == "DEFF":
@@ -164,6 +155,7 @@ class MenuHandler:
 			try:
 				total_db_file = file_repository.get_files_count_by_querystring(conn, search)
 
+				# TODO remove after testing
 				if total_db_file == 0:
 					shell.print_yellow('\nNo matching results from the DB.\n')
 				else:
@@ -182,9 +174,7 @@ class MenuHandler:
 							# print(f'\n{LocalData.peer_file_index(ip4_peer, ip6_peer, peer.port, file.file_md5, file.file_name)}')
 							# shell.print_yellow(f' {file.file_md5}')
 							# print(f' {file.file_name} from {ip4_peer|ip6_peer} on port {peer.port}')
-
-							if not LocalData.exist_peer_files(ip4_peer, ip6_peer, peer.port, file.file_md5, file.file_name):
-								LocalData.add_peer_files(ip4_peer, ip6_peer, peer.port, file.file_md5, file.file_name)
+							LocalData.add_peer_files(ip4_peer, ip6_peer, peer.port, file.file_md5, file.file_name)
 
 				conn.commit()
 				conn.close()
@@ -192,6 +182,7 @@ class MenuHandler:
 			except database.Error as e:
 				conn.rollback()
 				conn.close()
+				LocalData.clear_peer_files()
 				shell.print_red(f'\nError while retrieving data from database: {e}')
 
 			# Send a search for a file on the superpeer network
@@ -202,13 +193,13 @@ class MenuHandler:
 			ttl = '5'
 
 			packet = choice + pktid + ip + str(port).zfill(5) + ttl + search.ljust(20)
-			LocalData.set_sent_packet(pktid)
+			LocalData.set_sent_quer_packet(pktid)
 
 			server = ServerThread(port, TimedResponseHandler())
 			server.daemon = True
 			server.start()
 
-			spinner = SpinnerThread('Searching peers (ENTER to continue)', 'Research done!')
+			spinner = SpinnerThread('Searching files (ENTER to continue)', 'Research done!')
 			spinner.start()
 
 			timer = Timer(20, lambda: (spinner.stop(), server.stop()))
@@ -233,6 +224,7 @@ class MenuHandler:
 			# Retrieving the list of database's files and superpeer network's files
 			peer_files = LocalData.get_peer_files()
 
+			# TODO remove after testing
 			if len(peer_files) <= total_db_file:
 				shell.print_yellow('\nNo matching results from the superpeer network.\n')
 
