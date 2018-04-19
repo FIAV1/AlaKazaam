@@ -93,7 +93,7 @@ class LocalData:
 		return False
 
 	@classmethod
-	def find_shared_file(cls, index: int) -> tuple:
+	def get_shared_file(cls, index: int) -> tuple:
 		data = json.load(cls.json_file)
 		return data["files"][index]
 

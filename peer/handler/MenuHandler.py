@@ -8,7 +8,8 @@ import os
 
 class MenuHandler:
 
-	def serve(self, choice: str) -> None:
+	@staticmethod
+	def serve(choice: str) -> None:
 		""" Handle the peer packet
 
 		:param choice: the choice to handle
@@ -20,31 +21,38 @@ class MenuHandler:
 		p_ssid = LocalData.session_id
 
 		if choice == "ADFF":
+			temp_files = []
 			shell.print_blue('\nFiles available for sharing:')
 			for count, file in enumerate(os.scandir('shared')):
+				# se non ci sono file nella shared dir avvisa ed esce
+				if len(os.scandir('shared')):
+					shell.print_yellow('No file available for sharing. Add files to shared dir to get started.\n')
+					return
+
+				# stampa i risultati della scandir
 				file_md5 = hasher.get_md5(f'shared/{file.name}')
 				print(f'{count}] {file.name} | {file_md5}')
-			index = input('Choose a file to share (q to cancel): ')
-
-			if index == "q":
-				print('\n')
-				return
-
-			files = LocalData.get_shared_files()
+				temp_files.append((file_md5, file.name))
 
 			while True:
+				index = input('Choose a file to share (q to cancel): ')
+
+				if index == "q":
+					print('\n')
+					return
+
 				try:
 					index = int(index) - 1
 				except ValueError:
-					shell.print_red(f'\nWrong index: number in range 1 - {len(files)} expected\n')
+					shell.print_red(f'\nWrong index: number in range 1 - {len(temp_files)} expected\n')
 					continue
 
-				if 0 <= index <= len(files)-1:
-					file_name = LocalData.get_shared_file_name(files[index])
-					file_md5 = LocalData.get_shared_file_md5(files[index])
+				if 0 <= index <= len(temp_files)-1:
+					file_name = LocalData.get_shared_file_name(temp_files[index])
+					file_md5 = LocalData.get_shared_file_md5(temp_files[index])
 
 					# controlla se il file è già in condivisione
-					if not LocalData.is_shared_file(files[index]):
+					if not LocalData.is_shared_file(temp_files[index]):
 
 						# crea il pacchetto e lo invia al super peer
 						packet = choice + p_ssid + file_md5 + file_name.ljust(100)
@@ -56,20 +64,28 @@ class MenuHandler:
 
 						# aggiunge il file alla struttura dati ed esce
 						LocalData.add_shared_file(file_md5, file_name)
-						shell.print_blue(f'\nNew shared file added {file.name} | {file_md5}')
+						shell.print_blue(f'\nNew shared file added {file_name} | {file_md5}')
 						break
 					else:
 						# il file è già in condivisione
 						shell.print_yellow(f'\n{file_name} | {file_md5} already in sharing.\n')
 						break
 				else:
-					shell.print_red(f'\nWrong index: number in range 1 - {len(files)} expected\n')
+					shell.print_red(f'\nWrong index: number in range 1 - {len(temp_files)} expected\n')
 					continue
 
 		elif choice == "DEFF":
+			# recupera i files in sharing
+			files = LocalData.get_shared_files()
+
 			# scelta del file da rimuovere
-			shell.print_blue('File currently in sharing:')
-			for count, file in enumerate(LocalData.get_shared_files(), start=1):
+			shell.print_blue('\nFile currently in sharing:')
+			for count, file in enumerate(files, start=1):
+				# check se ci sono file in sharing
+				if not files:
+					shell.print_yellow('No files currently in sharing. Add files choosing the command from the menu.\n')
+					return
+
 				print(f'{count}] {LocalData.get_shared_file_name(file)} | {LocalData.get_shared_file_md5(file)}')
 
 			while True:
@@ -79,9 +95,6 @@ class MenuHandler:
 					print('\n')
 					return
 
-				# recupera i files in sharing
-				files = LocalData.get_shared_files()
-
 				try:
 					index = int(index) - 1
 				except ValueError:
@@ -90,7 +103,7 @@ class MenuHandler:
 
 				if 0 <= index <= len(files)-1:
 					# recupera il file dalla DS
-					file = LocalData.find_shared_file(index)
+					file = LocalData.get_shared_file(index)
 
 					# crea ed invia il pacchetto al supernode
 					packet = choice + p_ssid + LocalData.get_shared_file_md5(file)
@@ -117,7 +130,7 @@ class MenuHandler:
 					return
 
 				if not 0 < len(search) <= 20:
-					shell.print_red('\nQuery string must be a valid value (0 - 20 chars).')
+					shell.print_red('\nQuery string must be a valid value (1 - 20 chars).')
 					continue
 
 				break
@@ -126,46 +139,65 @@ class MenuHandler:
 
 			try:
 				socket = net_utils.send_packet(sp_ip4, sp_ip6, sp_port, packet)
-				socket.settimeout(25)
 
 			except net_utils.socket.error:
-				shell.print_red(f'\n{search} not found.\n')
+				shell.print_red(f'\nError while sending the request to the superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
 				return
 
 			try:
+				socket.settimeout(25)
 				command = socket.recv(4).decode()
 				if command != "AFIN":
 					shell.print_red(f'\nReceived a packet with a wrong command ({command}).\n')
 					return
 
+			# TODO: da rimuovere dopo i test (?)
 			except net_utils.socket.error:
-				shell.print_red(f'\nError while receiving the response from the superpeer: {sp_ip4}|{sp_ip6} [{sp_port}]\n')
+				shell.print_red(f'\nError while receiving the response from the superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
+				return
 			except ValueError:
-				shell.print_red(f'\nInvalid packet from superpeer: {sp_ip4}|{sp_ip6} [{sp_port}]\n')
+				shell.print_red(f'\nInvalid packet from superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
+				return
 
 			downloadables = []
-			num_downloadables = int(socket.recv(3))
+			try:
+				num_downloadables = int(socket.recv(3))
+
+				# check se ci sono file da scaricare
+				if num_downloadables == 0:
+					shell.print_yellow(f'{search} not found.\n')
+					return
+			# TODO: da rimuovere dopo i test (?)
+			except net_utils.socket.error:
+				shell.print_red(f'\nError while receiving the response from the superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
+				return
+
 			for i in range(num_downloadables):
 				try:
 					file_md5 = socket.recv(32).decode()
 					file_name = socket.recv(100).decode()
 					num_copies = int(socket.recv(3))
+				# TODO: da rimuovere dopo i test (?)
 				except net_utils.socket.error:
-					shell.print_red(f'\nError while receiving the response from the superpeer: {sp_ip4}|{sp_ip6} [{sp_port}]\n')
+					shell.print_red(f'\nError while receiving the response from the superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
 					continue
 				except ValueError:
-					shell.print_red(f'\nInvalid packet from superpeer: {sp_ip4}|{sp_ip6} [{sp_port}]\n')
+					shell.print_red(f'\nInvalid packet from superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
 					continue
+
 				for j in range(num_copies):
 					try:
 						(source_ip4, source_ip6) = net_utils.get_ip_pair(socket.recv(55).decode())
 						source_port = int(socket.recv(5))
+					# TODO: da rimuovere dopo i test (?)
 					except net_utils.socket.error:
-						shell.print_red(f'\nError while receiving the response from the superpeer: {sp_ip4}|{sp_ip6} [{sp_port}]\n')
+						shell.print_red(f'\nError while receiving the response from the superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
 						continue
 					except ValueError:
-						shell.print_red(f'\nInvalid packet from superpeer: {sp_ip4}|{sp_ip6} [{sp_port}]\n')
+						shell.print_red(f'\nInvalid packet from superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
 						continue
+
+					# prepara una lista con tutti i file che possono essere scaricati
 					downloadables.append((file_name, file_md5, source_ip4, source_ip6, source_port))
 
 			shell.print_blue(f'\nFiles found:')
@@ -209,7 +241,7 @@ class MenuHandler:
 
 			try:
 				command = sock.recv(4).decode()
-				if command != "LOGO":
+				if command != "ALGO":
 					shell.print_red(f'\nWrong response code "{command}": "{choice}" expected.\n')
 
 				num_files = int(sock.recv(3))
