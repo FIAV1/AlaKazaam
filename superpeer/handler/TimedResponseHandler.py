@@ -38,7 +38,7 @@ class TimedResponseHandler(HandlerInterface):
 			file_md5 = response[80:112]
 			filename = response[112:212]
 
-			if pktid != LocalData.get_sent_packet():
+			if pktid != LocalData.get_sent_quer_packet():
 				return
 
 			if not LocalData.exist_peer_files(ip4_peer, ip6_peer, port_peer, file_md5, filename):
@@ -55,7 +55,7 @@ class TimedResponseHandler(HandlerInterface):
 			ip4_peer, ip6_peer = net_utils.get_ip_pair(ip_peer)
 			port_peer = int(response[75:80])
 
-			if pktid != LocalData.get_sent_packet():
+			if pktid != LocalData.get_sent_supe_packet():
 				return
 
 			if not LocalData.is_super_friend(ip4_peer, ip6_peer, port_peer):
