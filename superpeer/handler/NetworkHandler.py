@@ -12,6 +12,8 @@ from superpeer.model.Peer import Peer
 from superpeer.model.File import File
 from superpeer.model import peer_repository
 from superpeer.model import file_repository
+from common.ServerThread import ServerThread
+from .NetworkTimedResponseHandler import NetworkTimedResponseHandler
 
 
 class NetworkHandler(HandlerInterface):
@@ -47,14 +49,33 @@ class NetworkHandler(HandlerInterface):
 
 			packet = packet[:80] + str(new_ttl).zfill(2) + packet[82:]
 
-			for peer in recipients:
-				ip4 = LocalData.get_super_friend_ip4(peer)
-				ip6 = LocalData.get_super_friend_ip6(peer)
-				port = LocalData.get_super_friend_port(peer)
+			for superfriend in recipients:
+				ip4 = LocalData.get_super_friend_ip4(superfriend)
+				ip6 = LocalData.get_super_friend_ip6(superfriend)
+				port = LocalData.get_super_friend_port(superfriend)
 				try:
 					net_utils.send_packet_and_close(ip4, ip6, port, packet)
+					self.log.write_blue(f'Forwarding to {ip4}|{ip6} [{port}] -> ', end='')
+					self.log.write(f'{packet}')
 				except socket.error as e:
-					self.log.write_red(f'An error has occurred while forwarding {packet}\n{e}')
+					self.log.write_red(f'Unable to forward a packet to {ip4}|{ip6} [{port}]: {e}')
+
+	def __broadcast_packet(self, packet: str) -> None:
+		""" Send the packet to a pool of hosts
+		:param packet: packet to be broadcasted
+		:return: None
+		"""
+
+		for superfriend in LocalData.get_super_friends():
+			ip4 = LocalData.get_super_friend_ip4(superfriend)
+			ip6 = LocalData.get_super_friend_ip6(superfriend)
+			port = LocalData.get_super_friend_port(superfriend)
+			try:
+				net_utils.send_packet_and_close(ip4, ip6, port, packet)
+				self.log.write_blue(f'Broadcasting to {ip4}|{ip6} [{port}] -> ', end='')
+				self.log.write(f'{packet}')
+			except socket.error as e:
+				self.log.write_red(f'Unable to broadcast a packet to {ip4}|{ip6} [{port}]: {e}')
 
 	def serve(self, sd: socket.socket) -> None:
 		""" Handle a network packet
@@ -96,13 +117,13 @@ class NetworkHandler(HandlerInterface):
 			ttl = packet[80:82]
 
 			# packet management
-			if pktid == LocalData.get_sent_packet():
+			if pktid == LocalData.get_sent_supe_packet():
 				# if the SUPE i sent has been forwarded to me erroneously
 				return
 
 			if not LocalData.exist_in_received_packets(pktid):
 				LocalData.add_received_packet(pktid, ip_peer, port_peer)
-				t = Timer(300, function=self.__delete_packet, args=pktid)
+				t = Timer(20, function=self.__delete_packet, args=pktid)
 				t.start()
 			else:
 				return
@@ -112,8 +133,10 @@ class NetworkHandler(HandlerInterface):
 						str(net_utils.get_network_port()).zfill(5)
 			try:
 				net_utils.send_packet_and_close(ip4_peer, ip6_peer, port_peer, response)
+				self.log.write_blue(f'Sending to {ip4_peer}|{ip6_peer} [{port_peer}] -> ', end='')
+				self.log.write(f'{response}')
 			except socket.error as e:
-				self.log.write_red(f'An error has occurred while sending an ASUP response: {e}')
+				self.log.write_red(f'An error has occurred while sending an {response} to {ip4_peer}|{ip6_peer} [{port_peer}]: {e}')
 
 			# forwarding the packet to other superpeers
 			self.__forward_packet(socket_ip_sender, ip_peer, ttl, packet)
@@ -123,20 +146,32 @@ class NetworkHandler(HandlerInterface):
 
 			if len(packet) != 64:
 				self.log.write_red(f'Invalid packet received: {packet}')
-				sd.send(error_response.encode())
-				sd.close()
+				try:
+					sd.send(error_response.encode())
+					sd.close()
+					self.log.write_blue(f'Sending to {socket_ip_sender} [{socket_port_sender}] -> ', end='')
+					self.log.write(f'{error_response}')
+				except socket.error as e:
+					self.log.write_red(f'An error has occurred while sending an ALGI response to {socket_ip_sender}: {e}')
+					return
 				return
 
-			ip = packet[4:59].decode()
-			port = packet[59:64].decode()
+			ip = packet[4:59]
+			port = packet[59:64]
 
 			try:
 				conn = database.get_connection(self.db_file)
 				conn.row_factory = database.sqlite3.Row
 			except database.Error as e:
 				self.log.write_red(f'An error has occurred while trying to serve the request: {e}')
-				sd.send(error_response.encode())
-				sd.close()
+				try:
+					sd.send(error_response.encode())
+					sd.close()
+					self.log.write_blue(f'Sending to {socket_ip_sender} [{socket_port_sender}] -> ', end='')
+					self.log.write(f'{error_response}')
+				except socket.error as e:
+					self.log.write_red(f'An error has occurred while sending {error_response} to {socket_ip_sender}: {e}')
+					return
 				return
 
 			try:
@@ -157,21 +192,30 @@ class NetworkHandler(HandlerInterface):
 
 				conn.commit()
 				conn.close()
-
 			except database.Error as e:
 				conn.rollback()
 				conn.close()
 				self.log.write_red(f'An error has occurred while trying to serve the request: {e}')
-				sd.send(error_response.encode())
-				sd.close()
+				try:
+					sd.send(error_response.encode())
+					sd.close()
+					self.log.write_blue(f'Sending to {socket_ip_sender} [{socket_port_sender}] -> ', end='')
+					self.log.write(f'{error_response}')
+				except socket.error as e:
+					self.log.write_red(f'An error has occurred while sending {error_response} to {socket_ip_sender}: {e}')
+					return
 				return
 
 			response = "ALGI" + peer.session_id
 
-			ip4_peer, ip6_peer = net_utils.get_ip_pair(peer.ip)
-			self.log.write_blue(f'Sending {ip4_peer}|{ip6_peer} [{port}] -> ', end='')
-			self.log.write(f'{response}')
-			sd.send(response.encode())
+			try:
+				sd.send(response.encode())
+				sd.close()
+				self.log.write_blue(f'Sending to {socket_ip_sender} [{socket_port_sender}] -> ', end='')
+				self.log.write(f'{response}')
+			except socket.error as e:
+				self.log.write_red(f'An error has occurred while sending {response} to {socket_ip_sender}: {e}')
+				return
 
 		elif command == "ADFF":
 			sd.close()
@@ -180,9 +224,9 @@ class NetworkHandler(HandlerInterface):
 				self.log.write_red(f'Invalid packet received: {packet}\nUnable to add the file in the DB.')
 				return
 
-			session_id = packet[4:20].decode()
-			md5 = packet[20:52].decode()
-			name = packet[52:152].decode().lower()
+			session_id = packet[4:20]
+			md5 = packet[20:52]
+			name = packet[52:152].lower().lstrip().rstrip()
 
 			try:
 				conn = database.get_connection(self.db_file)
@@ -228,8 +272,8 @@ class NetworkHandler(HandlerInterface):
 				self.log.write_red(f'Invalid packet received: {packet}\nUnable to delete the file from the DB.')
 				return
 
-			session_id = packet[4:20].decode()
-			md5 = packet[20:52].decode()
+			session_id = packet[4:20]
+			md5 = packet[20:52]
 
 			try:
 				conn = database.get_connection(self.db_file)
@@ -270,12 +314,117 @@ class NetworkHandler(HandlerInterface):
 			self.log.write_blue(f'Successfully removed file: {file.name} ({file.md5})')
 
 		elif command == "FIND":
-			pass
+			if len(packet) != 40:
+				self.log.write_red(f'Invalid packet received: {packet}\nUnable to reply.')
+				sd.close()
+				return
+
+			session_id = packet[4:20]
+			query = packet[20:40].lower().lstrip().rstrip()
+
+			if query != '*':
+				query = '%' + query + '%'
+
+			try:
+				conn = database.get_connection(self.db_file)
+				conn.row_factory = database.sqlite3.Row
+			except database.Error as e:
+				self.log.write_red(f'An error has occurred while trying to serve the request: {e}')
+				sd.close()
+				return
+
+			# check in my peers files (DB)
+			try:
+				peer = peer_repository.find(conn, session_id)
+
+				if peer is None:
+					self.log.write_red('Unauthorized request received: SessionID is invalid')
+					sd.close()
+					return
+				else:
+					file_rows = file_repository.get_files_by_querystring(conn, query)
+
+					for file_row in file_rows:
+						file_md5 = file_row['file_md5']
+						file_name = file_row['file_name']
+
+						owner_rows = peer_repository.get_peers_by_file(conn, file_md5)
+
+						for owner_row in owner_rows:
+							owner_ip = owner_row['ip']
+							owner_port = owner_row['port']
+							ip4_peer, ip6_peer = net_utils.get_ip_pair(owner_ip)
+
+							LocalData.add_net_peer_file(ip4_peer, ip6_peer, owner_port, file_md5, file_name)
+
+					conn.commit()
+					conn.close()
+			except database.Error as e:
+				conn.rollback()
+				conn.close()
+				self.log.write_red(f'An error has occurred while trying to serve the request: {e}')
+				sd.close()
+				return
+
+			# check in my shared files
+			for shared_file in LocalData.get_shared_files():
+				LocalData.add_net_peer_file(
+					net_utils.get_local_ipv4(),
+					net_utils.get_local_ipv6(),
+					net_utils.get_network_port(),
+					LocalData.get_shared_filemd5(shared_file),
+					LocalData.get_shared_filename(shared_file)
+				)
+
+			# flooding the QUER
+			pktid = str(uuid.uuid4().hex[:16].upper())
+			ip = net_utils.get_local_ip_for_response()
+			port = net_utils.get_aque_port()
+			ttl = '05'
+			query = packet[20:40]
+
+			packet = pktid + ip + str(port).zfill(5) + ttl + query
+
+			LocalData.set_sent_net_quer_packet(pktid)
+
+			server = ServerThread(port, NetworkTimedResponseHandler(self.log))
+			server.daemon = True
+			server.start()
+
+			timer = Timer(20, lambda: server.stop())
+			timer.start()
+
+			self.__broadcast_packet(packet)
+
+			timer.join()
+
+			try:
+				self.log.write_blue(f'Sending {socket_ip_sender} [{socket_port_sender}] -> ', end='')
+				self.log.write('AFIN')
+
+				# send the AFIN packet
+				fragment = "AFIN" + str(LocalData.get_net_peer_files_md5_amount())
+				sd.send(fragment.encode())
+
+				for md5 in LocalData.get_net_peer_files().keys():
+					fragment = md5 + LocalData.get_net_peer_file_name_by_md5(md5) + LocalData.get_net_peer_file_copy_amount_by_md5(md5)
+					sd.send(fragment.encode())
+
+					for file_tuple in LocalData.get_net_peer_files_list_by_md5(md5):
+						fragment = LocalData.get_net_peer_file_owner_ipv4(file_tuple) \
+							+ LocalData.get_net_peer_file_owner_ipv6(file_tuple) \
+							+ LocalData.get_net_peer_file_owner_port(file_tuple)
+						sd.send(fragment.encode())
+
+			except socket.error as e:
+				self.log.write_red(f'An error has occurred while sending an AFIN response to {socket_ip_sender}: {e}')
+				sd.close()
+
+			LocalData.clear_net_peer_files()
 
 		elif command == "LOGO":
 			if len(packet) != 20:
-				self.log.write_red(f'Invalid packet received: {packet}')
-				sd.send('Invalid request. Usage is: LOGO<your_session_id>'.encode())
+				self.log.write_red(f'Invalid packet received: {packet}\nUnable to reply.')
 				sd.close()
 				return
 
@@ -286,7 +435,6 @@ class NetworkHandler(HandlerInterface):
 				conn.row_factory = database.sqlite3.Row
 			except database.Error as e:
 				self.log.write_red(f'An error has occurred while trying to serve the request: {e}')
-				sd.send('An error has occurred while trying to serve your request'.encode())
 				sd.close()
 				return
 
@@ -296,7 +444,6 @@ class NetworkHandler(HandlerInterface):
 				if peer is None:
 					conn.close()
 					self.log.write_red('Unauthorized request received: SessionID is invalid')
-					sd.send('Unauthorized request: your SessionID is invalid'.encode())
 					sd.close()
 					return
 
@@ -311,16 +458,19 @@ class NetworkHandler(HandlerInterface):
 				conn.rollback()
 				conn.close()
 				self.log.write_red(f'An error has occurred while trying to serve the request: {e}')
-				sd.send('An error has occurred while trying to serve your request'.encode())
 				sd.close()
 				return
 
 			response = "ALGO" + str(deleted).zfill(3)
 
-			ip4_peer, ip6_peer = net_utils.get_ip_pair(peer.ip)
-			self.log.write_blue(f'Sending {ip4_peer}|{ip6_peer} [{port}] -> ', end='')
-			self.log.write(f'{response}')
-			sd.send(response.encode())
+			try:
+				sd.send(response.encode())
+				sd.close()
+				self.log.write_blue(f'Sending {socket_ip_sender} [{socket_port_sender}] -> ', end='')
+				self.log.write(f'{response}')
+			except socket.error as e:
+				self.log.write_red(f'An error has occurred while sending {response} to {socket_ip_sender}: {e}')
+				return
 
 		elif command == "QUER":
 			sd.close()
@@ -351,8 +501,26 @@ class NetworkHandler(HandlerInterface):
 					conn.close()
 					return
 
-				file_list = file_repository.get_files_by_querystring(conn, query)
+				file_rows = file_repository.get_files_by_querystring(conn, query)
 
+				for file_row in file_rows:
+					file_md5 = file_row['file_md5']
+					file_name = file_row['file_name']
+
+					owner_rows = peer_repository.get_peers_by_file(conn, file_md5)
+
+					for owner_row in owner_rows:
+						owner_ip = owner_row['ip']
+						owner_port = owner_row['port']
+
+						response = "AQUE" + pktid + owner_ip + owner_port + file_md5 + file_name
+
+						try:
+							net_utils.send_packet_and_close(ip4_peer, ip6_peer, port_peer, response)
+							self.log.write_blue(f'Sending {ip4_peer}|{ip6_peer} [{port_peer}] -> ', end='')
+							self.log.write(f'{response}')
+						except socket.error as e:
+							self.log.write_red(f'An error has occurred while sending {response}: {e}')
 				conn.commit()
 				conn.close()
 			except database.Error as e:
@@ -361,18 +529,11 @@ class NetworkHandler(HandlerInterface):
 				self.log.write_red(f'An error has occurred while trying to serve the request: {e}')
 				return
 
-			for file_row in file_list:
-				file_md5 = file_row['file_md5']
-				file_name = file_row['file_name']
-
-				response = "AQUE" + pktid + net_utils.get_local_ip_for_response() + file_md5 + file_name
-				net_utils.send_packet_and_close(ip4_peer, ip6_peer, port_peer, response)
-
-				self.log.write_blue(f'Sending {ip4_peer}|{ip6_peer} [{port_peer}] -> ', end='')
-				self.log.write(f'{response}')
-
 			# forwarding the packet to other superpeers
 			self.__forward_packet(socket_ip_sender, ip_peer, ttl, packet)
+
+		elif command == "RETR":
+			pass
 
 		else:
 			sd.close()

@@ -6,7 +6,7 @@ from common.HandlerInterface import HandlerInterface
 from superpeer.LocalData import LocalData
 
 
-class TimedResponseHandler(HandlerInterface):
+class MenuTimedResponseHandler(HandlerInterface):
 
 	def serve(self, sd: socket.socket) -> None:
 		""" Handle the peer request
@@ -38,11 +38,11 @@ class TimedResponseHandler(HandlerInterface):
 			file_md5 = response[80:112]
 			filename = response[112:212]
 
-			if pktid != LocalData.get_sent_quer_packet():
+			if pktid != LocalData.get_sent_menu_quer_packet():
 				return
 
-			if not LocalData.exist_peer_files(ip4_peer, ip6_peer, port_peer, file_md5, filename):
-				LocalData.add_peer_files(ip4_peer, ip6_peer, port_peer, file_md5, filename)
+			if not LocalData.exist_menu_peer_file(ip4_peer, ip6_peer, port_peer, file_md5, filename):
+				LocalData.add_menu_peer_file(ip4_peer, ip6_peer, port_peer, file_md5, filename)
 
 		elif command == "ASUP":
 

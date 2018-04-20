@@ -7,12 +7,10 @@ from .File import File
 def add_owner(conn: database.sqlite3.Connection, file_md5: str, peer_session_id: str) -> None:
 	""" Add the peer with the given session_id as file owner into the pivot table
 
-	Parameters:
-		conn - the db connection
-		file_md5 - the md5 of the file
-		session_id - the session id of the owner
-	Returns:
-		None
+	:param: conn - the db connection
+	:param: file_md5 - the md5 of the file
+	:param: session_id - the session id of the owner
+	:return: None
 	"""
 	conn.execute('INSERT INTO files_peers VALUES (?,?)', (file_md5, peer_session_id))
 
@@ -20,12 +18,9 @@ def add_owner(conn: database.sqlite3.Connection, file_md5: str, peer_session_id:
 def find(conn: database.sqlite3.Connection, file_md5: str) -> 'File':
 	""" Retrieve the file with the given md5 from database
 
-	Parameters:
-		conn - the db connection
-		file_md5 - the md5 of the file
-
-	Returns:
-		file - the istance of the founded file
+	:param: conn - the db connection
+	:param: file_md5 - the md5 of the file
+	:return: file - the istance of the founded file
 	"""
 	c = conn.cursor()
 	c.execute('SELECT * FROM files WHERE file_md5 = ?', (file_md5,))
@@ -57,13 +52,10 @@ def find_all(conn: database.sqlite3.Connection) -> list():
 def peer_has_file(conn: database.sqlite3.Connection, session_id: str, file_md5: str) -> bool:
 	""" Check if the peer with the given session_id actually own the file with the given md5
 
-	Parameters:
-		conn - the db connection
-		session_id - the session_id of the peer
-		file_md5 - the md5 of the file
-
-	Returns:
-		bool - True/False either the peer own the file or not
+	:param: conn - the db connection
+	:param:	session_id - the session_id of the peer
+	:param:	file_md5 - the md5 of the file
+	:return: bool - True/False either the peer own the file or not
 	"""
 	c = conn.cursor()
 	c.execute('SELECT * FROM files_peers WHERE file_md5= ? AND session_id= ?', (file_md5, session_id))
@@ -195,12 +187,12 @@ def get_files_by_querystring(conn: database.sqlite3.Connection, query: str) -> l
 
 	if query == '*':
 		c.execute(
-			'SELECT f.file_md5, f.file_name '
+			'SELECT * '
 			'FROM files AS f',
 		)
 	else:
 		c.execute(
-			'SELECT f.file_md5, f.file_name, '
+			'SELECT * '
 			'FROM files AS f'
 			'WHERE f.file_name LIKE ? ',
 			(query,)

@@ -2,6 +2,7 @@
 
 import re
 
+
 class LocalData:
 	""" Data class containing data structures and methods to interact with them """
 
@@ -12,15 +13,24 @@ class LocalData:
 	received_packets = dict()
 
 	# 'pktid'
-	sent_packet = str()
+	sent_supe_packet = str()
 
-	# ('ipv4', 'ipv6', 'port', 'md5', 'filename')
-	peer_files = list()
+	# 'pktid'
+	sent_menu_quer_packet = str()
+
+	# 'pktid'
+	sent_net_quer_packet = str()
+
+	# {'md5' : ('name', 'ipv4', 'ipv6', 'port')}
+	net_peer_files = dict()
+
+	# ('md5', 'name', 'ipv4', 'ipv6', 'port')
+	menu_peer_files = list()
 
 	# ('filename', 'md5', 'dim')
 	shared_files = list()
 
-	# super_super_friends management --------------------------------------------------------
+# super_super_friends management --------------------------------------------------------
 	@classmethod
 	def is_super_friend(cls, ip4_peer: str, ip6_peer: str, port_peer: int) -> bool:
 		return (ip4_peer, ip6_peer, port_peer) in cls.super_friends
@@ -66,9 +76,9 @@ class LocalData:
 	def remove_super_friend(cls, super_friend_index: int) -> None:
 		cls.super_friends.pop(super_friend_index)
 
-	# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-	# received packets management --------------------------------------------------
+# received packets management --------------------------------------------------
 	@classmethod
 	def add_received_packet(cls, pktid: str, ip_peer: str, port_peer: int) -> None:
 		cls.received_packets[pktid] = (ip_peer, port_peer)
@@ -80,65 +90,141 @@ class LocalData:
 	@classmethod
 	def exist_in_received_packets(cls, pktid: str) -> bool:
 		return pktid in cls.received_packets
-	# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-	# query management-------------------------------------------------------------
+# sent packet management-------------------------------------------------------------
 	@classmethod
-	def set_sent_packet(cls, pktid: str) -> None:
-		cls.sent_packet = pktid
-
-	@classmethod
-	def get_sent_packet(cls) -> str:
-		return cls.sent_packet
-	# -----------------------------------------------------------------------------
-
-	# peer_files management--------------------------------------------------------
-	@classmethod
-	def get_peer_files(cls) -> list:
-		return cls.peer_files
+	def set_sent_supe_packet(cls, pktid: str) -> None:
+		cls.sent_supe_packet = pktid
 
 	@classmethod
-	def get_file_owner_ip4(cls, file: tuple) -> str:
+	def get_sent_supe_packet(cls) -> str:
+		return cls.sent_supe_packet
+
+	@classmethod
+	def set_sent_menu_quer_packet(cls, pktid: str) -> None:
+		cls.sent_menu_quer_packet = pktid
+
+	@classmethod
+	def set_sent_net_quer_packet(cls, pktid: str) -> None:
+		cls.sent_net_quer_packet = pktid
+
+	@classmethod
+	def get_sent_menu_quer_packet(cls) -> str:
+		return cls.sent_menu_quer_packet
+
+	@classmethod
+	def get_sent_net_quer_packet(cls) -> str:
+		return cls.sent_net_quer_packet
+# -----------------------------------------------------------------------------
+
+# menu_peer_files management---------------------------------------------------
+	@classmethod
+	def get_menu_peer_files(cls) -> list:
+		return cls.menu_peer_files
+
+	@classmethod
+	def get_menu_file_owner_ip4(cls, file: tuple) -> str:
 		return file[0]
 
 	@classmethod
-	def get_file_owner_ip6(cls, file: tuple) -> str:
+	def get_menu_file_owner_ip6(cls, file: tuple) -> str:
 		return file[1]
 
 	@classmethod
-	def get_file_owner_port(cls, file: tuple) -> int:
+	def get_menu_file_owner_port(cls, file: tuple) -> int:
 		return file[2]
 
 	@classmethod
-	def get_file_md5(cls, file: tuple) -> str:
+	def get_menu_file_md5(cls, file: tuple) -> str:
 		return file[3]
 
 	@classmethod
-	def get_file_name(cls, file: tuple) -> str:
+	def get_menu_file_name(cls, file: tuple) -> str:
 		return file[4]
 
 	@classmethod
-	def add_peer_files(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> None:
-		cls.peer_files.append((ip4_peer, ip6_peer, port_peer, filemd5, filename))
+	def add_menu_peer_file(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> None:
+		cls.menu_peer_files.append((ip4_peer, ip6_peer, port_peer, filemd5, filename))
 
 	@classmethod
-	def exist_peer_files(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> bool:
+	def exist_menu_peer_file(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> bool:
 		return (ip4_peer, ip6_peer, port_peer, filemd5, filename) in cls.peer_files
 
 	@classmethod
-	def peer_file_index(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> int:
-		return cls.peer_files.index((ip4_peer, ip6_peer, port_peer, filemd5, filename))
+	def menu_peer_file_index(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> int:
+		return cls.menu_peer_files.index((ip4_peer, ip6_peer, port_peer, filemd5, filename))
 
 	@classmethod
-	def get_peer_file_by_index(cls, index: int) -> tuple:
-		return cls.peer_files.pop(index)
+	def get_menu_peer_file_by_index(cls, index: int) -> tuple:
+		return cls.menu_peer_files.pop(index)
 
 	@classmethod
-	def clear_peer_files(cls) -> None:
-		cls.peer_files.clear()
-	# -----------------------------------------------------------------------------
+	def clear_menu_peer_files(cls) -> None:
+		cls.menu_peer_files.clear()
+# -----------------------------------------------------------------------------
 
-	# shared files management -----------------------------------------------------
+# peer_files management--------------------------------------------------------
+	@classmethod
+	def get_net_peer_files(cls) -> dict:
+		return cls.net_peer_files
+
+	@classmethod
+	def add_net_peer_file(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> None:
+		if filemd5 in cls.net_peer_files.keys():
+			cls.net_peer_files[filemd5].append((filename, ip4_peer, ip6_peer, port_peer))
+		else:
+			cls.net_peer_files[filemd5] = list()
+			cls.net_peer_files[filemd5].append((filename, ip4_peer, ip6_peer, port_peer))
+
+	@classmethod
+	def exist_net_peer_file(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> bool:
+		if filemd5 in cls.net_peer_files.keys():
+			return (filename, ip4_peer, ip6_peer, port_peer) in cls.net_peer_files[filemd5]
+		return False
+
+	@classmethod
+	def get_net_peer_files_md5_amount(cls) -> int:
+		return len(cls.net_peer_files.keys())
+
+	@classmethod
+	def get_net_peer_file_copy_amount_by_md5(cls, filemd5: str) -> int:
+		if filemd5 in cls.net_peer_files.keys():
+			return len(cls.net_peer_files[filemd5])
+		return 0
+
+	@classmethod
+	def get_net_peer_file_name_by_md5(cls, filemd5: str) -> int:
+		return cls.net_peer_files[filemd5][0][0]
+
+	@classmethod
+	def get_net_peer_files_list_by_md5(cls, filemd5: str) -> list:
+		if filemd5 in cls.net_peer_files.keys():
+			return cls.net_peer_files[filemd5]
+		return list()
+
+	@classmethod
+	def get_net_peer_file_name(cls, file_tuple: tuple) -> str:
+		return file_tuple[0]
+
+	@classmethod
+	def get_net_peer_file_owner_ipv4(cls, file_tuple: tuple) -> str:
+		return file_tuple[1]
+
+	@classmethod
+	def get_net_peer_file_owner_ipv6(cls, file_tuple: tuple) -> str:
+		return file_tuple[2]
+
+	@classmethod
+	def get_net_peer_file_owner_port(cls, file_tuple: tuple) -> str:
+		return file_tuple[3]
+
+	@classmethod
+	def clear_net_peer_files(cls) -> None:
+		cls.net_peer_files.clear()
+# -----------------------------------------------------------------------------
+
+# shared files management -----------------------------------------------------
 	@classmethod
 	def get_shared_files(cls) -> list:
 		return cls.shared_files
@@ -184,4 +270,4 @@ class LocalData:
 	@classmethod
 	def get_shared_file_by_index(cls, index: int) -> tuple:
 		return cls.shared_files.pop(index)
-	# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
