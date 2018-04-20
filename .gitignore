@@ -108,5 +108,6 @@ ENV/
 
 # Local testing
 /test
+*.log
 
 /shared

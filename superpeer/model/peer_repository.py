@@ -90,7 +90,7 @@ def get_peers_by_file(conn: database.sqlite3.Connection, file_md5: str) -> list:
 	c = conn.cursor()
 
 	c.execute(
-		'SELECT p.ip, p.port '
+		'SELECT p.session_id, p.ip, p.port '
 		'FROM peers AS p NATURAL JOIN files_peers AS f_p '
 		'WHERE f_p.file_md5 = ?',
 		(file_md5,)

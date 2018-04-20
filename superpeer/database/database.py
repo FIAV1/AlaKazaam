@@ -27,7 +27,7 @@ def create_database(db_filename: str) -> None:
 	"""
 	try:
 		db_file = open(db_filename, "w+")
-		sqlscript = open('database/schema.sql', 'r')
+		sqlscript = open('superpeer/database/schema.sql', 'r')
 	except IOError as e:
 		print(e)
 		exit(0)
@@ -63,7 +63,7 @@ def reset_database(db_filename: str) -> bool:
 		bool - True or False either if succeeds or fails
 	"""
 	try:
-		sqlscript = open('database/reset.sql', 'r')
+		sqlscript = open('superpeer/database/reset.sql', 'r')
 	except IOError as e:
 		print(e)
 		exit(0)
@@ -89,8 +89,8 @@ def reset_database(db_filename: str) -> bool:
 def fill_seeds(db_filename: str) -> bool:
 
 	try:
-		reset_script = open('database/reset.sql', 'r')
-		seeds_script = open('database/seeds.sql', 'r')
+		reset_script = open('superpeer/database/reset.sql', 'r')
+		seeds_script = open('superpeer/database/seeds.sql', 'r')
 	except IOError as e:
 		print(e)
 		exit(0)
