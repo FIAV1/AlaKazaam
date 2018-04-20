@@ -123,7 +123,7 @@ class NetworkHandler(HandlerInterface):
 
 			if not LocalData.exist_in_received_packets(pktid):
 				LocalData.add_received_packet(pktid, ip_peer, port_peer)
-				t = Timer(20, function=self.__delete_packet, args=pktid)
+				t = Timer(20, function=self.__delete_packet, args=(pktid,))
 				t.start()
 			else:
 				return

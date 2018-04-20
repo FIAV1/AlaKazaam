@@ -22,13 +22,18 @@ def startup():
 			# 1) Lancia una SUPE al nodo conosciuto
 			pktid = str(uuid.uuid4().hex[:16].upper())
 			ip = net_utils.get_local_ip_for_response()
-			port = str(net_utils.get_network_port())
+			port = str(net_utils.get_network_port()).zfill(5)
 			ttl = '04'
 			packet = 'SUPE' + pktid + ip + port + ttl
 
 			super_ip4 = LocalData.get_superpeer_ip4()
 			super_ip6 = LocalData.get_superpeer_ip6()
 			super_port = LocalData.get_superpeer_port()
+
+			LocalData.set_sent_packet(pktid)
+
+			server = ServerThread(net_utils.get_network_port(), TimedResponseHandler.TimedResponseHandler())
+			server.start()
 
 			try:
 				net_utils.send_packet_and_close(super_ip4, super_ip6, super_port, packet)
@@ -37,11 +42,9 @@ def startup():
 				continue
 
 			# 2) Attende ASUP per 20 sec
-			server = ServerThread(net_utils.get_network_port(), TimedResponseHandler.TimedResponseHandler())
 			timer = Timer(20, lambda: server.stop())
-			server.start()
 			timer.start()
-			server.join()
+			timer.join()
 
 			# 3) Se non è possibile agganciarsi ad un super, devo far reinserire il peer all'utente
 			if len(LocalData.get_superpeer_candidates()) == 0:
@@ -61,7 +64,7 @@ def startup():
 
 		# Lancio una LOGI al superpeer scelto
 		ip = net_utils.get_local_ip_for_response()
-		port = str(net_utils.get_network_port())
+		port = str(net_utils.get_network_port()).zfill(5)
 		packet = "LOGI" + ip + port
 
 		super_ip4 = LocalData.get_superpeer_ip4()
@@ -73,24 +76,19 @@ def startup():
 			response = sock.recv(100).decode()
 
 			if len(response) != 20:
-				shell.print_red('There was an error in the login process: ', end='')
-				print(f'unexpected: {response}', end='')
-				shell.print_red('Please retry.')
+				shell.print_red(f'There was an error in the login process: unexpected: {response}.\nPlease retry.')
 				continue
 
 			session_id = response[4:20]
 
 			if session_id == '0' * 16:
-				shell.print_red('There was an error in the login process: ', end='')
-				print(f'unexpected session_id: {session_id}', end='')
-				shell.print_red('Please retry.')
+				shell.print_red(f'There was an error in the login process: unexpected session_id: {session_id}.\nPlease retry.')
 				continue
 
 			LocalData.session_id = response[4:20]
 			break
 		except socket.error as e:
-			shell.print_red(f'There was an error in the login process: {e}', end='')
-			shell.print_red('Please retry.')
+			shell.print_red(f'There was an error in the login process: {e}.\nPlease retry.')
 			sock.close()
 			continue
 
