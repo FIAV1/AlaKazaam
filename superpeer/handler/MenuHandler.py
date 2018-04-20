@@ -1,19 +1,20 @@
 #!/usr/bin/env python
 
-from utils import net_utils, Logger, hasher, shell_colors as shell
+from utils import net_utils, hasher, shell_colors as shell
 from utils.Downloader import Downloader
 import uuid
 import os
 from socket import socket
 from superpeer.LocalData import LocalData
 from common.ServerThread import ServerThread
-from superpeer.handler.TimedResponseHandler import TimedResponseHandler
+from .MenuTimedResponseHandler import MenuTimedResponseHandler
 from utils.SpinnerThread import SpinnerThread
 from threading import Timer
 from superpeer.database import database
 from superpeer.model import file_repository, peer_repository
 
-db_file = 'directory.db'
+db_file = 'superpeer/database/directory.db'
+
 
 class MenuHandler:
 
@@ -57,7 +58,7 @@ class MenuHandler:
 
 			old_superfriends_len = len(LocalData.get_super_friends())
 
-			server = ServerThread(port, TimedResponseHandler())
+			server = ServerThread(port, MenuTimedResponseHandler())
 			server.daemon = True
 			server.start()
 
@@ -213,10 +214,10 @@ class MenuHandler:
 
 							ip4_peer, ip6_peer = net_utils.get_ip_pair(peer.ip)
 							# stampa di debug
-							# print(f'\n{LocalData.peer_file_index(ip4_peer, ip6_peer, peer.port, file.file_md5, file.file_name)}', end='')
+							# print(f'\n{LocalData.menu_peer_file_index(ip4_peer, ip6_peer, peer.port, file.file_md5, file.file_name)}', end='')
 							# shell.print_yellow(f' {file.file_md5}', end='')
 							# print(f' {file.file_name} from {ip4_peer|ip6_peer} on port {peer.port}')
-							LocalData.add_peer_files(ip4_peer, ip6_peer, peer.port, file.file_md5, file.file_name)
+							LocalData.add_menu_peer_file(ip4_peer, ip6_peer, peer.port, file.file_md5, file.file_name)
 
 				conn.commit()
 				conn.close()
@@ -224,7 +225,7 @@ class MenuHandler:
 			except database.Error as e:
 				conn.rollback()
 				conn.close()
-				LocalData.clear_peer_files()
+				LocalData.clear_menu_peer_files()
 				shell.print_red(f'\nError while retrieving data from database: {e}')
 
 			# Send a search for a file on the superpeer network
@@ -235,9 +236,9 @@ class MenuHandler:
 			ttl = '05'
 
 			packet = choice + pktid + ip + str(port).zfill(5) + ttl + search.ljust(20)
-			LocalData.set_sent_quer_packet(pktid)
+			LocalData.set_sent_menu_quer_packet(pktid)
 
-			server = ServerThread(port, TimedResponseHandler())
+			server = ServerThread(port, MenuTimedResponseHandler())
 			server.daemon = True
 			server.start()
 
@@ -264,7 +265,7 @@ class MenuHandler:
 				server.join()
 
 			# Retrieving the list of database's files and superpeer network's files
-			peer_files = LocalData.get_peer_files()
+			peer_files = LocalData.get_menu_peer_files()
 
 			# TODO remove after testing
 			if len(peer_files) <= total_db_file:
@@ -276,13 +277,13 @@ class MenuHandler:
 
 			for peer_file in peer_files:
 
-				peer_ip4 = LocalData.get_file_owner_ip4(peer_file)
-				peer_ip6 = LocalData.get_file_owner_ip6(peer_file)
-				peer_port = LocalData.get_file_owner_port(peer_file)
-				file_md5 = LocalData.get_file_md5(peer_file)
-				file_name = LocalData.get_file_name(peer_file)
+				peer_ip4 = LocalData.get_menu_file_owner_ip4(peer_file)
+				peer_ip6 = LocalData.get_menu_file_owner_ip6(peer_file)
+				peer_port = LocalData.get_menu_file_owner_port(peer_file)
+				file_md5 = LocalData.get_menu_file_md5(peer_file)
+				file_name = LocalData.get_menu_file_name(peer_file)
 
-				print(f'\n{LocalData.peer_file_index(peer_ip4, peer_ip6, peer_port, file_md5, file_name) + 1}', end='')
+				print(f'\n{LocalData.menu_peer_file_index(peer_ip4, peer_ip6, peer_port, file_md5, file_name) + 1}', end='')
 				shell.print_yellow(f' {file_md5}', end='')
 				shell.print_blue(f' {file_name}', end='')
 				print(f' from {peer_ip4}|{peer_ip6} on port {peer_port}')
@@ -292,7 +293,7 @@ class MenuHandler:
 
 				if index == 'q':
 					print('\n')
-					LocalData.clear_peer_files()
+					LocalData.clear_menu_peer_files()
 					return
 
 				try:
@@ -303,13 +304,13 @@ class MenuHandler:
 
 				if 0 <= index <= len(peer_files):
 
-					chosen_peer_file = LocalData.get_peer_file_by_index(index)
+					chosen_peer_file = LocalData.get_menu_peer_file_by_index(index)
 
-					host_ip4 = LocalData.get_file_owner_ip4(chosen_peer_file)
-					host_ip6 = LocalData.get_file_owner_ip6(chosen_peer_file)
-					host_port = LocalData.get_file_owner_port(chosen_peer_file)
-					file_md5 = LocalData.get_file_md5(chosen_peer_file)
-					file_name = LocalData.get_file_name(chosen_peer_file)
+					host_ip4 = LocalData.get_menu_file_owner_ip4(chosen_peer_file)
+					host_ip6 = LocalData.get_menu_file_owner_ip6(chosen_peer_file)
+					host_port = LocalData.get_menu_file_owner_port(chosen_peer_file)
+					file_md5 = LocalData.get_menu_file_md5(chosen_peer_file)
+					file_name = LocalData.get_menu_file_name(chosen_peer_file)
 
 					# preparo packet per retr, faccio partire server in attesa download, invio packet e attendo
 					packet = 'RETR' + file_md5
@@ -318,7 +319,7 @@ class MenuHandler:
 						Downloader(host_ip4, host_ip6, host_port, packet, file_name).start()
 
 						shell.print_green(f'\nDownload of {file_name} completed.\n')
-						LocalData.clear_peer_files()
+						LocalData.clear_menu_peer_files()
 					except OSError:
 						shell.print_red(f'\nError while downloading {file_name}\n')
 
@@ -398,7 +399,7 @@ class MenuHandler:
 					print('\nYour shared files:')
 					for count, shared_file in enumerate(LocalData.get_shared_files(), 1):
 						shell.print_green(
-							f'{count}] {LocalData.get_shared_file_name(shared_file)}|{LocalData.get_shared_file_md5(shared_file)}\n')
+							f'{count}] {LocalData.get_shared_filename(shared_file)}|{LocalData.get_shared_filemd5(shared_file)}\n')
 
 			except database.Error as e:
 				conn.rollback()

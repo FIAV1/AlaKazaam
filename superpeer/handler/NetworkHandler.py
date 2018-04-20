@@ -13,7 +13,7 @@ from superpeer.model.File import File
 from superpeer.model import peer_repository
 from superpeer.model import file_repository
 from common.ServerThread import ServerThread
-from .TimedResponseHandler import TimedResponseHandler
+from .NetworkTimedResponseHandler import NetworkTimedResponseHandler
 
 
 class NetworkHandler(HandlerInterface):
@@ -355,7 +355,7 @@ class NetworkHandler(HandlerInterface):
 							owner_port = owner_row['port']
 							ip4_peer, ip6_peer = net_utils.get_ip_pair(owner_ip)
 
-							LocalData.add_peer_files(ip4_peer, ip6_peer, owner_port, file_md5, file_name)
+							LocalData.add_net_peer_file(ip4_peer, ip6_peer, owner_port, file_md5, file_name)
 
 					conn.commit()
 					conn.close()
@@ -368,7 +368,7 @@ class NetworkHandler(HandlerInterface):
 
 			# check in my shared files
 			for shared_file in LocalData.get_shared_files():
-				LocalData.add_peer_files(
+				LocalData.add_net_peer_file(
 					net_utils.get_local_ipv4(),
 					net_utils.get_local_ipv6(),
 					net_utils.get_network_port(),
@@ -385,9 +385,9 @@ class NetworkHandler(HandlerInterface):
 
 			packet = pktid + ip + str(port).zfill(5) + ttl + query
 
-			LocalData.set_sent_quer_packet(pktid)
+			LocalData.set_sent_net_quer_packet(pktid)
 
-			server = ServerThread(port, TimedResponseHandler())
+			server = ServerThread(port, NetworkTimedResponseHandler(self.log))
 			server.daemon = True
 			server.start()
 
@@ -403,24 +403,24 @@ class NetworkHandler(HandlerInterface):
 				self.log.write('AFIN')
 
 				# send the AFIN packet
-				fragment = "AFIN" + str(LocalData.get_peer_files_md5_amount())
+				fragment = "AFIN" + str(LocalData.get_net_peer_files_md5_amount())
 				sd.send(fragment.encode())
 
-				for md5 in LocalData.get_peer_files().keys():
-					fragment = md5 + LocalData.get_peer_file_name_by_md5(md5) + LocalData.get_peer_file_copy_amount_by_md5(md5)
+				for md5 in LocalData.get_net_peer_files().keys():
+					fragment = md5 + LocalData.get_net_peer_file_name_by_md5(md5) + LocalData.get_net_peer_file_copy_amount_by_md5(md5)
 					sd.send(fragment.encode())
 
-					for file_tuple in LocalData.get_peer_files_list_by_md5(md5):
-						fragment = LocalData.get_peer_file_owner_ipv4(file_tuple) \
-							+ LocalData.get_peer_file_owner_ipv6(file_tuple) \
-							+ LocalData.get_peer_file_owner_port(file_tuple)
+					for file_tuple in LocalData.get_net_peer_files_list_by_md5(md5):
+						fragment = LocalData.get_net_peer_file_owner_ipv4(file_tuple) \
+							+ LocalData.get_net_peer_file_owner_ipv6(file_tuple) \
+							+ LocalData.get_net_peer_file_owner_port(file_tuple)
 						sd.send(fragment.encode())
 
 			except socket.error as e:
 				self.log.write_red(f'An error has occurred while sending an AFIN response to {socket_ip_sender}: {e}')
 				sd.close()
 
-			LocalData.clear_peer_files()
+			LocalData.clear_net_peer_files()
 
 		elif command == "LOGO":
 			if len(packet) != 20:
