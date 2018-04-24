@@ -164,8 +164,9 @@ class MenuHandler:
 				shell.print_red(f'\nInvalid packet from superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
 				return
 
-			downloadables = []
-			sources = []
+			# ('file_name', 'file_md5', sources[])
+			downloadables = list()
+
 			try:
 				num_downloadables = int(socket.recv(3))
 
@@ -179,6 +180,9 @@ class MenuHandler:
 				return
 
 			for i in range(num_downloadables):
+				# ('owner_ip4', 'owner_ip6', 'owner_port')
+				sources = list()
+
 				try:
 					file_md5 = socket.recv(32).decode()
 					file_name = socket.recv(100).decode()

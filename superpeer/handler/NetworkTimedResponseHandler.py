@@ -36,7 +36,6 @@ class NetworkTimedResponseHandler(HandlerInterface):
 
 			pktid = response[4:20]
 			ip_peer = response[20:75]
-			ip4_peer, ip6_peer = net_utils.get_ip_pair(ip_peer)
 			port_peer = int(response[75:80])
 			file_md5 = response[80:112]
 			filename = response[112:212]
@@ -44,8 +43,8 @@ class NetworkTimedResponseHandler(HandlerInterface):
 			if pktid != LocalData.get_sent_net_quer_packet():
 				return
 
-			if not LocalData.exist_net_peer_file(ip4_peer, ip6_peer, port_peer, file_md5, filename):
-				LocalData.add_net_peer_file(ip4_peer, ip6_peer, port_peer, file_md5, filename)
+			if not LocalData.exist_net_peer_file(ip_peer, port_peer, file_md5, filename):
+				LocalData.add_net_peer_file(ip_peer, port_peer, file_md5, filename)
 
 		else:
 			self.log.write_red(f'Invalid packet received: {response}\nUnable to reply.')

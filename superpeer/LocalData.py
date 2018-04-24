@@ -170,17 +170,17 @@ class LocalData:
 		return cls.net_peer_files
 
 	@classmethod
-	def add_net_peer_file(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> None:
+	def add_net_peer_file(cls, ip_peer: str, port_peer: int, filemd5: str, filename: str) -> None:
 		if filemd5 in cls.net_peer_files.keys():
-			cls.net_peer_files[filemd5].append((filename, ip4_peer, ip6_peer, port_peer))
+			cls.net_peer_files[filemd5].append((filename, ip_peer, port_peer))
 		else:
 			cls.net_peer_files[filemd5] = list()
-			cls.net_peer_files[filemd5].append((filename, ip4_peer, ip6_peer, port_peer))
+			cls.net_peer_files[filemd5].append((filename, ip_peer, port_peer))
 
 	@classmethod
-	def exist_net_peer_file(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> bool:
+	def exist_net_peer_file(cls, ip_peer: str, port_peer: int, filemd5: str, filename: str) -> bool:
 		if filemd5 in cls.net_peer_files.keys():
-			return (filename, ip4_peer, ip6_peer, port_peer) in cls.net_peer_files[filemd5]
+			return (filename, ip_peer, port_peer) in cls.net_peer_files[filemd5]
 		return False
 
 	@classmethod
@@ -194,7 +194,7 @@ class LocalData:
 		return 0
 
 	@classmethod
-	def get_net_peer_file_name_by_md5(cls, filemd5: str) -> int:
+	def get_net_peer_file_name_by_md5(cls, filemd5: str) -> str:
 		return cls.net_peer_files[filemd5][0][0]
 
 	@classmethod
@@ -208,16 +208,12 @@ class LocalData:
 		return file_tuple[0]
 
 	@classmethod
-	def get_net_peer_file_owner_ipv4(cls, file_tuple: tuple) -> str:
+	def get_net_peer_file_owner_ip(cls, file_tuple: tuple) -> str:
 		return file_tuple[1]
 
 	@classmethod
-	def get_net_peer_file_owner_ipv6(cls, file_tuple: tuple) -> str:
-		return file_tuple[2]
-
-	@classmethod
 	def get_net_peer_file_owner_port(cls, file_tuple: tuple) -> str:
-		return file_tuple[3]
+		return file_tuple[2]
 
 	@classmethod
 	def clear_net_peer_files(cls) -> None:

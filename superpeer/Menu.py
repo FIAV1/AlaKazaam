@@ -22,8 +22,8 @@ class Menu:
 			print('| <2> Search other superpeers around you |')
 			print('| <3> Add a file                         |')
 			print('| <4> Delete a file                      |')
-			print('| <5> List your known superpeers              |')
-			print('| <6> List your known peers')
+			print('| <5> List your known superpeers         |')
+			print('| <6> List your known peers              |')
 			print('| <7> List all files                     |')
 			print('------------------------------------------')
 			choice = input('Select an option (q to exit): ')
@@ -34,7 +34,7 @@ class Menu:
 				elif choice == '2':
 					command = "SUPE"
 				elif choice == '3':
-					command = "ADDF"
+					command = "ADFF"
 				elif choice == '4':
 					command = "DEFF"
 				elif choice == '5':
