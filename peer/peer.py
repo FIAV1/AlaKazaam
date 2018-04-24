@@ -57,7 +57,7 @@ def startup():
 
 			# 3) Se invece era un superpeer falzo, pesco un super a random dalla lista dei candidati
 			else:
-				index = random.randint(0, len(LocalData.get_superpeer_candidates()))
+				index = random.randint(0, len(LocalData.get_superpeer_candidates()) -1)
 				superpeer = LocalData.get_superpeer_candidate_by_index(index)
 				LocalData.set_superpeer(superpeer)
 				break
@@ -89,7 +89,8 @@ def startup():
 			break
 		except socket.error as e:
 			shell.print_red(f'There was an error in the login process: {e}.\nPlease retry.')
-			sock.close()
+			with sock:
+				sock.close()
 			continue
 
 	shell.print_green(f'Successfully logged to the superpeer: {super_ip4}|{super_ip6} [{super_port}]\n')

@@ -23,11 +23,11 @@ def create_socket() -> (socket.socket, int):
 	"""
 	if random.random() <= 0.5:
 		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		sock.settimeout(2)
+		# sock.settimeout(2)
 		version = 4
 	else:
 		sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-		sock.settimeout(2)
+		# sock.settimeout(2)
 		version = 6
 
 	return sock, version

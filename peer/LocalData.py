@@ -73,7 +73,8 @@ class LocalData:
 	# query management-------------------------------------------------------------
 	@classmethod
 	def get_shared_files(cls) -> list:
-		return json.load(cls.json_file)["files"]
+		#return json.load(cls.json_file)["files"]
+		return cls.shared_files
 
 	@classmethod
 	def get_shared_file_name(cls, file: tuple) -> str:
@@ -85,30 +86,35 @@ class LocalData:
 
 	@classmethod
 	def add_shared_file(cls, file_md5: str, file_name: str) -> None:
-		data = json.load(cls.json_file)["files"].append((file_md5, file_name))
-		json.dump(data, open("peer/data.json", "w"))
+		# data = json.load(cls.json_file)["files"].append((file_md5, file_name))
+		#json.dump(data, open("peer/data.json", "w"))
+		cls.shared_files.append((file_name, file_md5))
 
 	@classmethod
 	def is_shared_file(cls, file: tuple) -> bool:
-		data = json.load(cls.json_file)
-		if data["files"].count(file) > 0:
-			return True
-		return False
+		#data = json.load(cls.json_file)
+		#if data["files"].count(file) > 0:
+		#	return True
+		#return False
+		return file in cls.shared_files
 
 	@classmethod
 	def get_shared_file(cls, index: int) -> tuple:
-		data = json.load(cls.json_file)
-		return data["files"][index]
+		#data = json.load(cls.json_file)
+		#return data["files"][index]
+		return cls.shared_files[index]
 
 	@classmethod
 	def remove_shared_file(cls, file: tuple) -> None:
-		data = json.load(cls.json_file)["files"].remove(file)
-		json.dump(data, open("peer/data.json", "w"))
+		#data = json.load(cls.json_file)["files"].remove(file)
+		#json.dump(data, open("peer/data.json", "w"))
+		cls.shared_files.remove(file)
 
 	@classmethod
 	def clear_shared_files(cls) -> None:
-		data = {"files": [], "superpeer": []}
-		json.dump(data, open("peer/data.json", "w"))
+		#data = {"files": [], "superpeer": []}
+		#json.dump(data, open("peer/data.json", "w"))
+		cls.shared_files.clear()
   # ------------------------------------------------------------------------------
   
   # received packets management --------------------------------------------------

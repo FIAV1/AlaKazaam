@@ -263,7 +263,7 @@ class NetworkHandler(HandlerInterface):
 				self.log.write_red(f'An error has occurred while trying to serve the request: {e}')
 				return
 
-			self.log.write_blue(f'Successfully added file: {file.name} ({file.md5})')
+			self.log.write_blue(f'Successfully added file: {file.file_name} ({file.file_md5})')
 
 		elif command == "DEFF":
 			sd.close()
@@ -311,7 +311,7 @@ class NetworkHandler(HandlerInterface):
 				self.log.write_red(f'An error has occurred while trying to serve the request: {e}')
 				return
 
-			self.log.write_blue(f'Successfully removed file: {file.name} ({file.md5})')
+			self.log.write_blue(f'Successfully removed file: {file.file_name} ({file.file_md5})')
 
 		elif command == "FIND":
 			if len(packet) != 40:
@@ -428,7 +428,7 @@ class NetworkHandler(HandlerInterface):
 				sd.close()
 				return
 
-			session_id = packet[4:20].decode()
+			session_id = packet[4:20]
 
 			try:
 				conn = database.get_connection(self.db_file)

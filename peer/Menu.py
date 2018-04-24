@@ -29,9 +29,9 @@ class Menu:
 				if choice == '1':
 					command = 'FIND'
 				elif choice == '2':
-					command = 'ADDF'
+					command = 'ADFF'
 				elif choice == '3':
-					command = 'DELF'
+					command = 'DEFF'
 				elif choice == '4':
 					command = 'SHOWSUPER'
 
