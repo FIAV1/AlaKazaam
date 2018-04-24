@@ -193,7 +193,7 @@ def get_files_by_querystring(conn: database.sqlite3.Connection, query: str) -> l
 	else:
 		c.execute(
 			'SELECT * '
-			'FROM files AS f'
+			'FROM files AS f '
 			'WHERE f.file_name LIKE ? ',
 			(query,)
 		)
