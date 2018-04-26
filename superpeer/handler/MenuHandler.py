@@ -392,8 +392,8 @@ class MenuHandler:
 
 				else:
 
+					print('\nLogged peers files:')
 					for count, file_row in enumerate(files, 1):
-						print('\nLogged peers files:')
 						shell.print_green(f'{count}] {file_row["file_name"]}|{file_row["file_md5"]}:')
 
 					print('\nYour shared files:')
