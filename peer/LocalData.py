@@ -99,7 +99,7 @@ class LocalData:
 	@classmethod
 	def is_shared_file(cls, file: tuple) -> bool:
 		data = json.load(open(cls.json_file))
-		if data["files"].count(file) > 0:
+		if data["files"].count(list(file)) > 0:
 			return True
 		return False
 
