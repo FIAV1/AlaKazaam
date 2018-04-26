@@ -10,7 +10,7 @@ class LocalData:
 	session_id = str()
 
 	# ('ipv4', 'ipv6', 'port')
-	superpeer = tuple()
+	superpeer = tuple(json.load(open('peer/data.json'))["superpeer"])
 
 	# 'pktid'
 	sent_packet = str()
@@ -21,9 +21,6 @@ class LocalData:
 	# ('ipv4', 'ipv6', 'port')
 	superpeer_candidates = list()
 
-	# ('file_name', 'file_md5')
-	shared_files = list()
-
 	# friend management ------------------------------------------------------------
 	@classmethod
 	def get_superpeer(cls) -> tuple:
@@ -31,6 +28,9 @@ class LocalData:
 
 	@classmethod
 	def set_superpeer(cls, superpeer: tuple) -> None:
+		data = json.load(cls.json_file)
+		data["superpeer"] = superpeer
+		json.dump(data, open('peer/data.json', 'w'))
 		cls.superpeer = superpeer
 
 	@classmethod
@@ -44,6 +44,13 @@ class LocalData:
 	@classmethod
 	def get_superpeer_port(cls) -> int:
 		return cls.superpeer[2]
+
+	@classmethod
+	def superpeer_is_empty(cls) -> bool:
+		if len(cls.superpeer) > 0:
+			return False
+		else:
+			return True
 	# -----------------------------------------------------------------------------
 
 	# superpeer_candidates management ---------------------------------------------
@@ -73,8 +80,7 @@ class LocalData:
 	# query management-------------------------------------------------------------
 	@classmethod
 	def get_shared_files(cls) -> list:
-		#return json.load(cls.json_file)["files"]
-		return cls.shared_files
+		return json.load(cls.json_file)["files"]
 
 	@classmethod
 	def get_shared_file_name(cls, file: tuple) -> str:
@@ -86,38 +92,35 @@ class LocalData:
 
 	@classmethod
 	def add_shared_file(cls, file_md5: str, file_name: str) -> None:
-		# data = json.load(cls.json_file)["files"].append((file_md5, file_name))
-		#json.dump(data, open("peer/data.json", "w"))
-		cls.shared_files.append((file_name, file_md5))
+		data = json.load(cls.json_file)
+		data["files"].append((file_md5, file_name))
+		json.dump(data, open("peer/data.json", "w"))
 
 	@classmethod
 	def is_shared_file(cls, file: tuple) -> bool:
-		#data = json.load(cls.json_file)
-		#if data["files"].count(file) > 0:
-		#	return True
-		#return False
-		return file in cls.shared_files
+		data = json.load(cls.json_file)
+		if data["files"].count(file) > 0:
+			return True
+		return False
 
 	@classmethod
 	def get_shared_file(cls, index: int) -> tuple:
-		#data = json.load(cls.json_file)
-		#return data["files"][index]
-		return cls.shared_files[index]
+		data = json.load(cls.json_file)
+		return data["files"][index]
 
 	@classmethod
 	def remove_shared_file(cls, file: tuple) -> None:
-		#data = json.load(cls.json_file)["files"].remove(file)
-		#json.dump(data, open("peer/data.json", "w"))
-		cls.shared_files.remove(file)
+		data = json.load(cls.json_file)
+		data["files"].remove(list(file))
+		json.dump(data, open("peer/data.json", "w"))
 
 	@classmethod
 	def clear_shared_files(cls) -> None:
-		#data = {"files": [], "superpeer": []}
-		#json.dump(data, open("peer/data.json", "w"))
-		cls.shared_files.clear()
-  # ------------------------------------------------------------------------------
-  
-  # received packets management --------------------------------------------------
+		data = {"files": [], "superpeer": []}
+		json.dump(data, open("peer/data.json", "w"))
+	# ------------------------------------------------------------------------------
+
+	#  received packets management --------------------------------------------------
 	@classmethod
 	def add_received_packet(cls, pktid: str) -> None:
 		cls.received_packets.append(pktid)
