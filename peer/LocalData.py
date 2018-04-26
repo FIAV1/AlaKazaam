@@ -5,7 +5,7 @@ import json
 class LocalData:
 	""" Data class containing data structures and methods to interact with them """
 
-	json_file = open('peer/data.json')
+	json_file = 'peer/data.json'
 
 	session_id = str()
 
@@ -28,7 +28,7 @@ class LocalData:
 
 	@classmethod
 	def set_superpeer(cls, superpeer: tuple) -> None:
-		data = json.load(cls.json_file)
+		data = json.load(open(cls.json_file))
 		data["superpeer"] = superpeer
 		json.dump(data, open('peer/data.json', 'w'))
 		cls.superpeer = superpeer
@@ -80,7 +80,7 @@ class LocalData:
 	# query management-------------------------------------------------------------
 	@classmethod
 	def get_shared_files(cls) -> list:
-		return json.load(cls.json_file)["files"]
+		return json.load(open(cls.json_file))["files"]
 
 	@classmethod
 	def get_shared_file_name(cls, file: tuple) -> str:
@@ -92,25 +92,25 @@ class LocalData:
 
 	@classmethod
 	def add_shared_file(cls, file_md5: str, file_name: str) -> None:
-		data = json.load(cls.json_file)
+		data = json.load(open(cls.json_file))
 		data["files"].append((file_md5, file_name))
 		json.dump(data, open("peer/data.json", "w"))
 
 	@classmethod
 	def is_shared_file(cls, file: tuple) -> bool:
-		data = json.load(cls.json_file)
+		data = json.load(open(cls.json_file))
 		if data["files"].count(file) > 0:
 			return True
 		return False
 
 	@classmethod
 	def get_shared_file(cls, index: int) -> tuple:
-		data = json.load(cls.json_file)
+		data = json.load(open(cls.json_file))
 		return data["files"][index]
 
 	@classmethod
 	def remove_shared_file(cls, file: tuple) -> None:
-		data = json.load(cls.json_file)
+		data = json.load(open(cls.json_file))
 		data["files"].remove(list(file))
 		json.dump(data, open("peer/data.json", "w"))
 
