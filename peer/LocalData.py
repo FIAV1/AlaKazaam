@@ -83,11 +83,11 @@ class LocalData:
 		return json.load(open(cls.json_file))["files"]
 
 	@classmethod
-	def get_shared_file_name(cls, file: tuple) -> str:
+	def get_shared_file_md5(cls, file: tuple) -> str:
 		return file[0]
 
 	@classmethod
-	def get_shared_file_md5(cls, file: tuple) -> str:
+	def get_shared_file_name(cls, file: tuple) -> str:
 		return file[1]
 
 	@classmethod
