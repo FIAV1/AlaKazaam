@@ -149,7 +149,7 @@ class LocalData:
 
 	@classmethod
 	def exist_menu_peer_file(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> bool:
-		return (ip4_peer, ip6_peer, port_peer, filemd5, filename) in cls.peer_files
+		return (ip4_peer, ip6_peer, port_peer, filemd5, filename) in cls.menu_peer_files
 
 	@classmethod
 	def menu_peer_file_index(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> int:

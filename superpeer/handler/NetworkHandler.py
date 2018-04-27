@@ -483,6 +483,8 @@ class NetworkHandler(HandlerInterface):
 				self.log.write_red(f'Invalid packet received: {packet}\nUnable to reply.')
 				return
 
+			self.log.write(f'{packet}')
+
 			pktid = packet[4:20]
 			ip_peer = packet[20:75]
 			ip4_peer, ip6_peer = net_utils.get_ip_pair(ip_peer)
@@ -502,37 +504,53 @@ class NetworkHandler(HandlerInterface):
 
 			try:
 				total_file = file_repository.get_files_count_by_querystring(conn, query)
-				if total_file == 0:
+				if total_file != 0:
+
+					file_rows = file_repository.get_files_by_querystring(conn, query)
+
+					for file_row in file_rows:
+						file_md5 = file_row['file_md5']
+						file_name = file_row['file_name']
+
+						owner_rows = peer_repository.get_peers_by_file(conn, file_md5)
+
+						for owner_row in owner_rows:
+							owner_ip = owner_row['ip']
+							owner_port = owner_row['port']
+
+							response = "AQUE" + pktid + owner_ip + owner_port + file_md5 + file_name.ljust(100)
+
+							try:
+								net_utils.send_packet_and_close(ip4_peer, ip6_peer, port_peer, response)
+								self.log.write_blue(f'Sending {ip4_peer}|{ip6_peer} [{port_peer}] -> ', end='')
+								self.log.write(f'{response}')
+							except socket.error as e:
+								self.log.write_red(f'An error has occurred while sending {response}: {e}')
+					conn.commit()
 					conn.close()
-					return
-
-				file_rows = file_repository.get_files_by_querystring(conn, query)
-
-				for file_row in file_rows:
-					file_md5 = file_row['file_md5']
-					file_name = file_row['file_name']
-
-					owner_rows = peer_repository.get_peers_by_file(conn, file_md5)
-
-					for owner_row in owner_rows:
-						owner_ip = owner_row['ip']
-						owner_port = owner_row['port']
-
-						response = "AQUE" + pktid + owner_ip + owner_port + file_md5 + file_name.ljust(100)
-
-						try:
-							net_utils.send_packet_and_close(ip4_peer, ip6_peer, port_peer, response)
-							self.log.write_blue(f'Sending {ip4_peer}|{ip6_peer} [{port_peer}] -> ', end='')
-							self.log.write(f'{response}')
-						except socket.error as e:
-							self.log.write_red(f'An error has occurred while sending {response}: {e}')
-				conn.commit()
-				conn.close()
+				else:
+					conn.close()
 			except database.Error as e:
 				conn.rollback()
 				conn.close()
 				self.log.write_red(f'An error has occurred while trying to serve the request: {e}')
 				return
+
+			local_shared_files = LocalData.get_shared_files()
+
+			for local_shared_file in local_shared_files:
+				local_ip = net_utils.get_local_ip_for_response()
+				local_port = str(net_utils.get_aque_port())
+				file_md5 = LocalData.get_shared_filemd5(local_shared_file)
+				file_name = LocalData.get_shared_filename(local_shared_file).ljust(100)
+				response = "AQUE" + pktid + local_ip + local_port + file_md5 + file_name
+
+				try:
+					net_utils.send_packet_and_close(ip4_peer, ip6_peer, port_peer, response)
+					self.log.write_blue(f'Sending {ip4_peer}|{ip6_peer} [{port_peer}] -> ', end='')
+					self.log.write(f'{response}')
+				except socket.error as e:
+					self.log.write_red(f'An error has occurred while sending {response}: {e}')
 
 			# forwarding the packet to other superpeers
 			self.__forward_packet(socket_ip_sender, ip_peer, ttl, packet)

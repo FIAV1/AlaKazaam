@@ -38,7 +38,6 @@ class MenuHandler:
 				shell.print_red(f'\nUnable to send the packet on the socket: {e}')
 				return
 
-
 	def serve(self, choice: str) -> None:
 		""" Handle the peer packet
 
@@ -188,7 +187,7 @@ class MenuHandler:
 
 			# Read matching files from DB
 			try:
-				conn = database.get_connection('directory.db')
+				conn = database.get_connection(db_file)
 				conn.row_factory = database.sqlite3.Row
 
 			except database.Error as e:
@@ -385,21 +384,22 @@ class MenuHandler:
 			try:
 				files = file_repository.find_all(conn)
 
+				print('\nYour shared files:')
+				if not LocalData.get_shared_files():
+					shell.print_red('You do not have shared files.')
+
+				for count, shared_file in enumerate(LocalData.get_shared_files(), 1):
+					shell.print_green(
+						f'{count}] {LocalData.get_shared_filename(shared_file)}|{LocalData.get_shared_filemd5(shared_file)}\n')
+
+				print('\nLogged peers files:')
 				if not files:
-					shell.print_red('You do not have any files.')
+					shell.print_red('You do not have logged peers files.')
 					conn.close()
 					return
 
-				else:
-
-					print('\nLogged peers files:')
-					for count, file_row in enumerate(files, 1):
-						shell.print_green(f'{count}] {file_row["file_name"]}|{file_row["file_md5"]}:')
-
-					print('\nYour shared files:')
-					for count, shared_file in enumerate(LocalData.get_shared_files(), 1):
-						shell.print_green(
-							f'{count}] {LocalData.get_shared_filename(shared_file)}|{LocalData.get_shared_filemd5(shared_file)}\n')
+				for count, file_row in enumerate(files, 1):
+					shell.print_green(f'{count}] {file_row["file_name"]}|{file_row["file_md5"]}:')
 
 			except database.Error as e:
 				conn.rollback()
