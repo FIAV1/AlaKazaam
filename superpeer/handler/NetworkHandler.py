@@ -540,7 +540,7 @@ class NetworkHandler(HandlerInterface):
 
 			for local_shared_file in local_shared_files:
 				local_ip = net_utils.get_local_ip_for_response()
-				local_port = str(net_utils.get_aque_port())
+				local_port = str(net_utils.get_network_port()).zfill(5)
 				file_md5 = LocalData.get_shared_filemd5(local_shared_file)
 				file_name = LocalData.get_shared_filename(local_shared_file).ljust(100)
 				response = "AQUE" + pktid + local_ip + local_port + file_md5 + file_name
