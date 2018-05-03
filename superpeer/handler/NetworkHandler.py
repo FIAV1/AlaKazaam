@@ -14,6 +14,7 @@ from superpeer.model import peer_repository
 from superpeer.model import file_repository
 from common.ServerThread import ServerThread
 from .NetworkTimedResponseHandler import NetworkTimedResponseHandler
+from utils.Uploader import Uploader
 
 
 class NetworkHandler(HandlerInterface):
@@ -556,7 +557,44 @@ class NetworkHandler(HandlerInterface):
 			self.__forward_packet(socket_ip_sender, ip_peer, ttl, packet)
 
 		elif command == "RETR":
-			pass
+			if len(packet) != 36:
+				self.log.write_blue('Sending -> ', end='')
+				self.log.write('Invalid packet. Unable to reply.')
+				sd.send('Invalid packet. Unable to reply.'.encode())
+				sd.close()
+				return
+
+			file_md5 = packet[4:36]
+
+			file_name = LocalData.get_shared_filename_by_filemd5(file_md5)
+
+			if file_name is None:
+				self.log.write_blue('Sending -> ', end='')
+				self.log.write('Sorry, the requested file is not available anymore by the selected peer.')
+				sd.send('Sorry, the requested file is not available anymore by the selected peer.'.encode())
+				sd.close()
+				return
+
+			try:
+				f_obj = open('shared/' + file_name, 'rb')
+			except OSError as e:
+				self.log.write_red(f'Cannot open the file to upload: {e}')
+				self.log.write_blue('Sending -> ', end='')
+				self.log.write('Sorry, the peer encountered a problem while serving your packet.')
+				sd.send('Sorry, the peer encountered a problem while serving your packet.'.encode())
+				sd.close()
+				return
+
+			try:
+				Uploader(sd, f_obj, self.log).start()
+				self.log.write_blue(f'Sent {sd.getpeername()[0]} [{sd.getpeername()[1]}] -> ', end='')
+				self.log.write(f'{file_name}')
+				sd.close()
+
+			except OSError:
+				self.log.write_red('Error while sending the file.')
+				sd.close()
+				return
 
 		else:
 			sd.close()
