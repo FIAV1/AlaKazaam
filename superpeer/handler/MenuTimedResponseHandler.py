@@ -43,6 +43,11 @@ class MenuTimedResponseHandler(HandlerInterface):
 
 			if not LocalData.exist_menu_peer_file(ip4_peer, ip6_peer, port_peer, file_md5, filename):
 				LocalData.add_menu_peer_file(ip4_peer, ip6_peer, port_peer, file_md5, filename)
+				index = LocalData.menu_peer_file_index(ip4_peer, ip6_peer, port_peer, file_md5, filename)
+				print(f'{index +1}] ', end='')
+				print(f'{filename} ', end='')
+				shell.print_yellow(f'md5={filemd5} ', end='')
+				print(f'({ip4_peer}|{ip6_peer} [{port_peer}])')
 
 		elif command == "ASUP":
 

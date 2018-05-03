@@ -274,19 +274,6 @@ class MenuHandler:
 				shell.print_yellow('\nNo file matching the keyword.\n')
 				return
 
-			for peer_file in peer_files:
-
-				peer_ip4 = LocalData.get_menu_file_owner_ip4(peer_file)
-				peer_ip6 = LocalData.get_menu_file_owner_ip6(peer_file)
-				peer_port = LocalData.get_menu_file_owner_port(peer_file)
-				file_md5 = LocalData.get_menu_file_md5(peer_file)
-				file_name = LocalData.get_menu_file_name(peer_file)
-
-				print(f'\n{LocalData.menu_peer_file_index(peer_ip4, peer_ip6, peer_port, file_md5, file_name) + 1}', end='')
-				shell.print_yellow(f' {file_md5}', end='')
-				shell.print_blue(f' {file_name}', end='')
-				print(f' from {peer_ip4}|{peer_ip6} on port {peer_port}')
-
 			while True:
 				index = input('\nPlease select a file to download: ')
 
@@ -329,7 +316,7 @@ class MenuHandler:
 
 		elif choice == "LISTSUPERPEERS":
 
-			shell.print_green('\nList of known peers:')
+			shell.print_green('\nList of known superpeers:')
 
 			if not LocalData.get_super_friends():
 				shell.print_red('You do not know any superpeers.')
@@ -338,8 +325,7 @@ class MenuHandler:
 					friend_ip4 = LocalData.get_super_friend_ip4(friend)
 					friend_ip6 = LocalData.get_super_friend_ip6(friend)
 					friend_port = LocalData.get_super_friend_port(friend)
-					shell.print_blue(
-						f'{count}] {friend_ip4} {friend_ip6} {str(friend_port)}')
+					shell.print_blue(f'{count}] {friend_ip4} {friend_ip6} {str(friend_port)}')
 
 		elif choice == "LISTPEERS":
 
@@ -361,6 +347,7 @@ class MenuHandler:
 					return
 
 				else:
+					shell.print_green('\nList of known peers:')
 					for count, peer_row in enumerate(peer_list, 1):
 						shell.print_blue(f'{count}]' + peer_row['ip'] + peer_row['port'] + '\n')
 
@@ -384,22 +371,23 @@ class MenuHandler:
 			try:
 				files = file_repository.find_all(conn)
 
-				print('\nYour shared files:')
+				shell.print_green('\nYour shared files:')
 				if not LocalData.get_shared_files():
 					shell.print_red('You do not have shared files.')
 
 				for count, shared_file in enumerate(LocalData.get_shared_files(), 1):
-					shell.print_green(
-						f'{count}] {LocalData.get_shared_filename(shared_file)}|{LocalData.get_shared_filemd5(shared_file)}\n')
+					print(f'{count}] {LocalData.get_shared_filename(shared_file)} ', end='')
+					shell.print_yellow(f'{LocalData.get_shared_filemd5(shared_file)}\n')
 
-				print('\nLogged peers files:')
+				shell.print_green('\nLogged peers files:')
 				if not files:
 					shell.print_red('You do not have logged peers files.')
 					conn.close()
 					return
 
 				for count, file_row in enumerate(files, 1):
-					shell.print_green(f'{count}] {file_row["file_name"]}|{file_row["file_md5"]}:')
+					print(f'{count}] {file_row["file_name"]} ', end='')
+					shell.print_yellow(f'{file_row["file_md5"]}')
 
 			except database.Error as e:
 				conn.rollback()

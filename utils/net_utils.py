@@ -42,14 +42,19 @@ def send_packet(ip4_peer: str, ip6_peer: str, port_peer: int, packet: str) -> so
 		:param packet: packet to be sent
 		:return: None
 	"""
-	(sock, version) = create_socket()
+	try:
+		(sock, version) = create_socket()
 
-	if version == 4:
-		sock.connect((ip4_peer, port_peer))
-	else:
-		sock.connect((ip6_peer, port_peer))
+		if version == 4:
+			sock.connect((ip4_peer, port_peer))
+		else:
+			sock.connect((ip6_peer, port_peer))
 
-	sock.send(packet.encode())
+		sock.send(packet.encode())
+
+	except socket.error:
+		sock = None
+
 	return sock
 
 	# self.log.write_blue(f'Sending {ip4_peer}|{ip6_peer} [{port_peer}] -> ', end='')

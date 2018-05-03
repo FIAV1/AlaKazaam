@@ -93,7 +93,7 @@ def startup():
 			shell.print_red(f'There was an error in the login process: {e}.\nPlease retry.')
 			# pulisco il file json da file in sharing e superpeer vecchio
 			LocalData.clear_shared_files()
-			with sock:
+			if sock is not None:
 				sock.close()
 			continue
 

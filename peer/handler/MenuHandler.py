@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+
+import time
+from threading import Timer
+from utils.SpinnerThread import SpinnerThread
 from utils import hasher, net_utils
 from peer.LocalData import LocalData
 from utils import shell_colors as shell
@@ -147,16 +151,26 @@ class MenuHandler:
 
 			except net_utils.socket.error:
 				shell.print_red(f'\nError while sending the request to the superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
+				if socket is not None:
+					socket.close()
 				return
+
+			spinner = SpinnerThread('Searching files', 'Research done!')
+			spinner.start()
 
 			try:
 				socket.settimeout(25)
 				command = socket.recv(4).decode()
+
+				spinner.stop()
+				spinner.join()
+				print('\033[1A', end='\r')
+
 				if command != "AFIN":
 					shell.print_red(f'\nReceived a packet with a wrong command ({command}).\n')
+					socket.close()
 					return
 
-			# TODO: da rimuovere dopo i test (?)
 			except net_utils.socket.error:
 				shell.print_red(f'\nError while receiving the response from the superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
 				return
@@ -164,7 +178,7 @@ class MenuHandler:
 				shell.print_red(f'\nInvalid packet from superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
 				return
 
-			# ('file_name', 'file_md5', sources[])
+			# ('file_name', 'file_md5', owners[])
 			downloadables = list()
 
 			try:
@@ -173,21 +187,20 @@ class MenuHandler:
 				# check se ci sono file da scaricare
 				if num_downloadables == 0:
 					shell.print_yellow(f'{search} not found.\n')
+					socket.close()
 					return
-			# TODO: da rimuovere dopo i test (?)
 			except net_utils.socket.error:
 				shell.print_red(f'\nError while receiving the response from the superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
 				return
 
 			for i in range(num_downloadables):
 				# ('owner_ip4', 'owner_ip6', 'owner_port')
-				sources = list()
+				owners = list()
 
 				try:
 					file_md5 = socket.recv(32).decode()
-					file_name = socket.recv(100).decode()
+					file_name = socket.recv(100).decode().lstrip().rstrip()
 					num_copies = int(socket.recv(3))
-				# TODO: da rimuovere dopo i test (?)
 				except net_utils.socket.error:
 					shell.print_red(f'\nError while receiving the response from the superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
 					continue
@@ -197,22 +210,23 @@ class MenuHandler:
 
 				for j in range(num_copies):
 					try:
-						(source_ip4, source_ip6) = net_utils.get_ip_pair(socket.recv(55).decode())
-						source_port = int(socket.recv(5))
-						sources.append((source_ip4, source_ip6, source_port))
-					# TODO: da rimuovere dopo i test (?)
+						(owner_ip4, owner_ip6) = net_utils.get_ip_pair(socket.recv(55).decode())
+						owner_port = int(socket.recv(5))
+						owners.append((owner_ip4, owner_ip6, owner_port))
 					except net_utils.socket.error:
 						shell.print_red(f'\nError while receiving the response from the superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
 						continue
 					except ValueError:
 						shell.print_red(f'\nInvalid packet from superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
 						continue
-				if sources:
+
+				if owners:
 					# prepara una lista con tutti i file che possono essere scaricati
-					downloadables.append((file_name, file_md5, sources))
+					downloadables.append((file_name, file_md5, owners))
 
 			if not downloadables:
 				shell.print_red(f'\nSomething went wrong while retrieving {search}\n')
+				socket.close()
 				return
 
 			shell.print_green(f'\nFiles found:')
@@ -220,53 +234,54 @@ class MenuHandler:
 				print(f'{count}] {downloadable[0]} | {downloadable[1]}')
 
 			while True:
-				index_d = input('Choose a file to download (q to cancel): ')
+				choosed_file_index = input('Choose a file to download (q to cancel): ')
 
-				if index_d == "q":
+				if choosed_file_index == "q":
 					print('\n')
+					socket.close()
 					return
 
 				try:
-					index_d = int(index_d) - 1
+					choosed_file_index = int(choosed_file_index) - 1
 				except ValueError:
 					shell.print_red(f'\nWrong index: number in range 1 - {len(downloadables)} expected\n')
 					continue
 
-				if not 0 <= index_d <= len(downloadables) - 1:
+				if not 0 <= choosed_file_index <= len(downloadables) - 1:
 					shell.print_red(f'\nWrong index: number in range 1 - {len(downloadables)} expected\n')
 					continue
 				else:
-					available_file_name = downloadables[index_d][0]
-					available_file_md5 = downloadables[index_d][1]
-					availables = downloadables[index_d][2]
+					choosed_file_name = downloadables[choosed_file_index][0]
+					choosed_file_md5 = downloadables[choosed_file_index][1]
+					choosed_file_owners = downloadables[choosed_file_index][2]
 
-					shell.print_green(f'\nAvailable sources for {available_file_name}:')
-					for count, available in enumerate(availables, 1):
-						print(f'{count}] {available[0]}|{available[1]} [{available[2]}]')
+					shell.print_green(f'\nAvailable sources for {choosed_file_name}:')
+					for count, choosed_file_owner in enumerate(choosed_file_owners, 1):
+						print(f'{count}] {choosed_file_owner[0]}|{choosed_file_owner[1]} [{choosed_file_owner[2]}]')
 
 					while True:
-						index_a = input(f'Choose a source for {available_file_name} (q to cancel): ')
+						choosed_owner_index = input(f'Choose a source for {choosed_file_name} (q to cancel): ')
 
-						if index_a == "q":
+						if choosed_owner_index == "q":
 							print('\n')
 							return
 
 						try:
-							index_a = int(index_a) - 1
+							choosed_owner_index = int(choosed_owner_index) - 1
 						except ValueError:
-							shell.print_red(f'\nWrong index: number in range 1 - {len(availables)} expected\n')
+							shell.print_red(f'\nWrong index: number in range 1 - {len(choosed_file_owners)} expected\n')
 							continue
 
-						if 0 <= index_a <= len(availables) - 1:
-							packet = "RETR" + available_file_md5
+						if 0 <= choosed_owner_index <= len(choosed_file_owners) - 1:
+							packet = "RETR" + choosed_file_md5
 							try:
-								Downloader(availables[index_a][0], availables[index_a][1], availables[index_a][2], packet, available_file_name)
-								shell.print_green(f'\n{available_file_name} downloaded successfully.\n')
+								Downloader(choosed_file_owners[choosed_owner_index][0], choosed_file_owners[choosed_owner_index][1], choosed_file_owners[choosed_owner_index][2], packet, choosed_file_name).start()
+								shell.print_green(f'\n{choosed_file_name} downloaded successfully.\n')
 							except OSError:
-								shell.print_red(f'\nError while downloading {available_file_name}.\n')
+								shell.print_red(f'\nError while downloading {choosed_file_name}.\n')
 							break
 						else:
-							shell.print_red(f'\nWrong index: number in range 1 - {len(availables)} expected\n')
+							shell.print_red(f'\nWrong index: number in range 1 - {len(choosed_file_owners)} expected\n')
 							continue
 					break
 

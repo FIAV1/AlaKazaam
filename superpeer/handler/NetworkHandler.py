@@ -367,7 +367,7 @@ class NetworkHandler(HandlerInterface):
 				return
 
 			# check in my shared files
-			for shared_file in LocalData.get_shared_files():
+			for shared_file in LocalData.search_in_shared_files(query.strip('%')):
 				LocalData.add_net_peer_file(
 					net_utils.get_local_ip_for_response(),
 					net_utils.get_network_port(),
@@ -503,6 +503,7 @@ class NetworkHandler(HandlerInterface):
 				self.log.write_red(f'An error has occurred while trying to serve the request: {e}')
 				return
 
+			# check in my peers files (DB)
 			try:
 				total_file = file_repository.get_files_count_by_querystring(conn, query)
 				if total_file != 0:
@@ -537,9 +538,8 @@ class NetworkHandler(HandlerInterface):
 				self.log.write_red(f'An error has occurred while trying to serve the request: {e}')
 				return
 
-			local_shared_files = LocalData.get_shared_files()
-
-			for local_shared_file in local_shared_files:
+			# check in my shared files
+			for local_shared_file in LocalData.search_in_shared_files(query.strip('%')):
 				local_ip = net_utils.get_local_ip_for_response()
 				local_port = str(net_utils.get_network_port()).zfill(5)
 				file_md5 = LocalData.get_shared_filemd5(local_shared_file)
