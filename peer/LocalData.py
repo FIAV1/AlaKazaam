@@ -91,6 +91,14 @@ class LocalData:
 		return file[1]
 
 	@classmethod
+	def get_shared_file_name_from_md5(cls, file_md5: str) -> str:
+		shared_files = cls.get_shared_files()
+		for file in shared_files:
+			if cls.get_shared_file_md5(file) == file_md5:
+				return file[1]
+
+
+	@classmethod
 	def add_shared_file(cls, file_md5: str, file_name: str) -> None:
 		data = json.load(open(cls.json_file))
 		data["files"].append((file_md5, file_name))
