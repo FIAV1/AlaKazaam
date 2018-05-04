@@ -41,7 +41,7 @@ class MenuHandler:
 				# stampa i risultati della scandir
 				file_md5 = hasher.get_md5(f'shared/{file.name}')
 				print(f'{count}] {file.name} | {file_md5}')
-				temp_files.append((file.name, file_md5))
+				temp_files.append((file_md5, file.name))
 
 			while True:
 				index = input('Choose a file to share (q to cancel): ')

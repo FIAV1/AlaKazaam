@@ -197,6 +197,8 @@ class MenuHandler:
 			try:
 				total_db_file = file_repository.get_files_count_by_querystring(conn, search)
 
+				print(f'{total_db_file}')
+
 				# TODO remove after testing
 				if total_db_file == 0:
 					shell.print_yellow('\nNo matching results from the DB.\n')
@@ -207,16 +209,16 @@ class MenuHandler:
 					# print('\nFile from peers: ')
 
 					for file in db_files:
-						peers = peer_repository.get_peers_by_file(conn, file.file_md5)
+						peers = peer_repository.get_peers_by_file(conn, file[0])
 
 						for peer in peers:
 
-							ip4_peer, ip6_peer = net_utils.get_ip_pair(peer.ip)
+							ip4_peer, ip6_peer = net_utils.get_ip_pair(peer[1])
 							# stampa di debug
 							# print(f'\n{LocalData.menu_peer_file_index(ip4_peer, ip6_peer, peer.port, file.file_md5, file.file_name)}', end='')
 							# shell.print_yellow(f' {file.file_md5}', end='')
 							# print(f' {file.file_name} from {ip4_peer|ip6_peer} on port {peer.port}')
-							LocalData.add_menu_peer_file(ip4_peer, ip6_peer, peer.port, file.file_md5, file.file_name)
+							LocalData.add_menu_peer_file(ip4_peer, ip6_peer, peer[2], file[0], file[1])
 
 				conn.commit()
 				conn.close()

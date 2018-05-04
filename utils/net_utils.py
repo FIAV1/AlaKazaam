@@ -8,8 +8,8 @@ from peer.LocalData import LocalData
 from utils import shell_colors
 
 config = {
-	'ipv4': '',
-	'ipv6': '',
+	'ipv4': '172.16.1.3',
+	'ipv6': 'fc00::1:3',
 	'network_port': 3000,
 	'aque_port': 4000,
 	'asup_port': 5000
