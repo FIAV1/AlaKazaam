@@ -591,8 +591,8 @@ class NetworkHandler(HandlerInterface):
 				self.log.write(f'{file_name}')
 				sd.close()
 
-			except OSError:
-				self.log.write_red('Error while sending the file.')
+			except OSError as e:
+				self.log.write_red(f'Error while sending the file: {e}')
 				sd.close()
 				return
 

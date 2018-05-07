@@ -57,7 +57,6 @@ class NetworkHandler(HandlerInterface):
 		# log the packet received
 		socket_ip_sender = sd.getpeername()[0]
 		socket_port_sender = sd.getpeername()[1]
-		sd.close()
 
 		self.log.write_green(f'{socket_ip_sender} [{socket_port_sender}] -> ', end='')
 		self.log.write(f'{packet}')
@@ -65,9 +64,10 @@ class NetworkHandler(HandlerInterface):
 		command = packet[:4]
 
 		if command == "SUPE":
+			sd.close()
+
 			if len(packet) != 82:
 				self.log.write_red('Invalid packet. Unable to reply.')
-				sd.close()
 				return
 
 			pktid = packet[4:20]
@@ -124,8 +124,8 @@ class NetworkHandler(HandlerInterface):
 				self.log.write(f'{file_name}')
 				sd.close()
 
-			except OSError:
-				self.log.write_red('Error while sending the file.')
+			except OSError as e:
+				self.log.write_red(f'Error while sending the file: {e}')
 				sd.close()
 				return
 
