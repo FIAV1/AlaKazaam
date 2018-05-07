@@ -4,7 +4,7 @@ from utils import net_utils, hasher, shell_colors as shell
 from utils.Downloader import Downloader
 import uuid
 import os
-from socket import socket
+import socket
 from superpeer.LocalData import LocalData
 from common.ServerThread import ServerThread
 from .MenuTimedResponseHandler import MenuTimedResponseHandler
@@ -61,7 +61,7 @@ class MenuHandler:
 			server.daemon = True
 			server.start()
 
-			spinner = SpinnerThread('Searching peers (ENTER to continue)', 'Research done!')
+			spinner = SpinnerThread('Searching superpeers (ENTER to continue)', 'Research done! (ENTER to continue)')
 			spinner.start()
 
 			timer = Timer(20, lambda: (spinner.stop(), server.stop()))
@@ -197,28 +197,36 @@ class MenuHandler:
 			try:
 				total_db_file = file_repository.get_files_count_by_querystring(conn, search)
 
-				print(f'{total_db_file}')
-
-				# TODO remove after testing
 				if total_db_file == 0:
-					shell.print_yellow('\nNo matching results from the DB.\n')
-				else:
+					shell.print_yellow('\nNo matching results from your peers.\n')
 
-					db_files = file_repository.get_files_by_querystring(conn, search)
+				else:
+					shell.print_green('\nFiles from your logged peers:\n')
+					file_rows = file_repository.get_files_by_querystring(conn, search)
 
 					# print('\nFile from peers: ')
 
-					for file in db_files:
-						peers = peer_repository.get_peers_by_file(conn, file[0])
+					for file_row in file_rows:
+						file_md5 = file_row['file_md5']
+						file_name = file_row['file_name']
 
-						for peer in peers:
+						owner_rows = peer_repository.get_peers_by_file(conn, file_md5)
 
-							ip4_peer, ip6_peer = net_utils.get_ip_pair(peer[1])
+						for owner_row in owner_rows:
+							owner_ip = owner_row['ip']
+							owner_port = int(owner_row['port'])
+
+							ip4_peer, ip6_peer = net_utils.get_ip_pair(owner_ip)
 							# stampa di debug
 							# print(f'\n{LocalData.menu_peer_file_index(ip4_peer, ip6_peer, peer.port, file.file_md5, file.file_name)}', end='')
 							# shell.print_yellow(f' {file.file_md5}', end='')
 							# print(f' {file.file_name} from {ip4_peer|ip6_peer} on port {peer.port}')
-							LocalData.add_menu_peer_file(ip4_peer, ip6_peer, peer[2], file[0], file[1])
+							LocalData.add_menu_peer_file(ip4_peer, ip6_peer, owner_port, file_md5, file_name)
+							index = LocalData.menu_peer_file_index(ip4_peer, ip6_peer, owner_port, file_md5, file_name)
+							print(f'{index +1}] ', end='')
+							print(f'{file_name} ', end='')
+							shell.print_yellow(f'md5={file_md5} ', end='')
+							print(f'({ip4_peer}|{ip6_peer} [{owner_port}])')
 
 				conn.commit()
 				conn.close()
@@ -230,7 +238,8 @@ class MenuHandler:
 				shell.print_red(f'\nError while retrieving data from database: {e}')
 
 			# Send a search for a file on the superpeer network
-			# QUER[4B].Packet_Id[16B].IP_Peer[55B].Port_Peer[5B].TTL[2B].Search[20B]
+			shell.print_green('\nFiles from the network:\n')
+
 			pktid = str(uuid.uuid4().hex[:16].upper())
 			ip = net_utils.get_local_ip_for_response()
 			port = net_utils.get_aque_port()
@@ -243,7 +252,7 @@ class MenuHandler:
 			server.daemon = True
 			server.start()
 
-			spinner = SpinnerThread('Searching files (ENTER to continue)', 'Research done!')
+			spinner = SpinnerThread('Searching files (ENTER to continue)', 'Research done! (ENTER to continue)')
 			spinner.start()
 
 			timer = Timer(20, lambda: (spinner.stop(), server.stop()))
@@ -268,8 +277,7 @@ class MenuHandler:
 			# Retrieving the list of database's files and superpeer network's files
 			peer_files = LocalData.get_menu_peer_files()
 
-			# TODO remove after testing
-			if len(peer_files) <= total_db_file:
+			if len(peer_files) == total_db_file:
 				shell.print_yellow('\nNo matching results from the superpeer network.\n')
 
 			if len(peer_files) < 1:

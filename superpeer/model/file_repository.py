@@ -140,7 +140,7 @@ def get_files_count_by_querystring(conn: database.sqlite3.Connection, query: str
 	if row is None:
 		return 0
 
-	return int(row[0])
+	return int(row['num'])
 
 
 def get_files_with_copy_amount_by_querystring(conn: database.sqlite3.Connection, query: str) -> list:
