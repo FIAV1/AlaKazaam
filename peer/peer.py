@@ -4,6 +4,7 @@ from utils import net_utils, Logger, shell_colors as shell
 from .LocalData import LocalData
 from common.ServerThread import ServerThread
 from .handler import NetworkHandler, MenuHandler, TimedResponseHandler
+from utils.SpinnerThread import SpinnerThread
 from .Menu import Menu
 import uuid
 from threading import Timer
@@ -37,6 +38,9 @@ def startup():
 				server = ServerThread(net_utils.get_network_port(), TimedResponseHandler.TimedResponseHandler())
 				server.start()
 
+				spinner = SpinnerThread('Trying to login', '')
+				spinner.start()
+
 				try:
 					net_utils.send_packet_and_close(super_ip4, super_ip6, super_port, packet)
 				except socket.error as e:
@@ -44,9 +48,12 @@ def startup():
 					continue
 
 				# 2) Attende ASUP per 20 sec
-				timer = Timer(20, lambda: server.stop())
+				timer = Timer(20, lambda: (server.stop(), spinner.stop()))
 				timer.start()
+
 				timer.join()
+				spinner.join()
+
 
 				# 3) Se non è possibile agganciarsi ad un super, devo far reinserire il peer all'utente
 				if len(LocalData.get_superpeer_candidates()) == 0:
@@ -57,7 +64,7 @@ def startup():
 				elif LocalData.get_superpeer() in LocalData.get_superpeer_candidates():
 					break
 
-				# 3) Se invece era un superpeer falzo, pesco un super a random dalla lista dei candidati
+				# 3) Se invece era un superpeer falso, pesco un super a random dalla lista dei candidati
 				else:
 					index = random.randint(0, len(LocalData.get_superpeer_candidates()) -1)
 					superpeer = LocalData.get_superpeer_candidate_by_index(index)
@@ -79,20 +86,22 @@ def startup():
 
 			if len(response) != 20:
 				shell.print_red(f'There was an error in the login process: unexpected: {response}.\nPlease retry.')
+				LocalData.clear_backup_data()
 				continue
 
 			session_id = response[4:20]
 
 			if session_id == '0' * 16:
 				shell.print_red(f'There was an error in the login process: unexpected session_id: {session_id}.\nPlease retry.')
+				LocalData.clear_backup_data()
 				continue
 
 			LocalData.session_id = response[4:20]
 			break
-		except socket.error as e:
-			shell.print_red(f'There was an error in the login process: {e}.\nPlease retry.')
+		except (socket.error, AttributeError):
+			shell.print_yellow(f'Unable to contact {super_ip4}|{super_ip6} [{super_port}]')
 			# pulisco il file json da file in sharing e superpeer vecchio
-			LocalData.clear_shared_files()
+			LocalData.clear_backup_data()
 			if sock is not None:
 				sock.close()
 			continue

@@ -36,7 +36,7 @@ class MenuTimedResponseHandler(HandlerInterface):
 			ip4_peer, ip6_peer = net_utils.get_ip_pair(ip_peer)
 			port_peer = int(response[75:80])
 			file_md5 = response[80:112]
-			filename = response[112:212]
+			filename = response[112:212].lstrip().rstrip()
 
 			if pktid != LocalData.get_sent_menu_quer_packet():
 				return

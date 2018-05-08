@@ -123,9 +123,10 @@ class LocalData:
 		json.dump(data, open("peer/data.json", "w"))
 
 	@classmethod
-	def clear_shared_files(cls) -> None:
+	def clear_backup_data(cls) -> None:
 		data = {"files": [], "superpeer": []}
 		json.dump(data, open("peer/data.json", "w"))
+		cls.superpeer = tuple()
 	# ------------------------------------------------------------------------------
 
 	#  received packets management --------------------------------------------------

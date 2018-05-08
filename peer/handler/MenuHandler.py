@@ -149,7 +149,7 @@ class MenuHandler:
 			try:
 				socket = net_utils.send_packet(sp_ip4, sp_ip6, sp_port, packet)
 
-			except net_utils.socket.error:
+			except (net_utils.socket.error, AttributeError):
 				shell.print_red(f'\nError while sending the request to the superpeer: {sp_ip4}|{sp_ip6} [{sp_port}].\n')
 				if socket is not None:
 					socket.close()
@@ -299,10 +299,10 @@ class MenuHandler:
 
 				num_files = int(sock.recv(3))
 				shell.print_blue(f'\n{num_files} files has been removed from sharing.\n')
-			except net_utils.socket.error:
+			except (net_utils.socket.error, AttributeError):
 				shell.print_red(f'\nError while receiving the response for "{choice}".\n')
 
-			LocalData.clear_shared_files()
+			LocalData.clear_backup_data()
 
 		else:
 			pass
