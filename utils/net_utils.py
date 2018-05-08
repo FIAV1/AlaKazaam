@@ -166,6 +166,8 @@ def prompt_parameters_request() -> None:
 				break
 			except ipaddress.AddressValueError:
 				shell_colors.print_red(f'\n{get_local_ipv4()} is not a valid IPv4 address, please reinsert it.\n')
+				set_local_ipv4('')
+				set_local_ipv6('')
 				continue
 
 	while True:
