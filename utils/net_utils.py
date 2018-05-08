@@ -8,8 +8,8 @@ from peer.LocalData import LocalData
 from utils import shell_colors
 
 config = {
-	'ipv4': '172.16.1.3',
-	'ipv6': 'fc00::1:3',
+	'ipv4': '172.16.1.1',
+	'ipv6': 'fc00::1:1',
 	'network_port': 3000,
 	'aque_port': 4000,
 	'asup_port': 5000
@@ -167,7 +167,6 @@ def prompt_parameters_request() -> None:
 			except ipaddress.AddressValueError:
 				shell_colors.print_red(f'\n{get_local_ipv4()} is not a valid IPv4 address, please reinsert it.\n')
 				set_local_ipv4('')
-				set_local_ipv6('')
 				continue
 
 	while True:
@@ -186,6 +185,7 @@ def prompt_parameters_request() -> None:
 				break
 			except ipaddress.AddressValueError as e:
 				shell_colors.print_red(f'\n{get_local_ipv6()} is not a valid IPv6 address, please reinsert it.\n')
+				set_local_ipv6('')
 				continue
 
 
