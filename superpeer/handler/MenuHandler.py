@@ -179,6 +179,9 @@ class MenuHandler:
 			while True:
 				search = input('\nEnter the file name: ')
 
+				if search != '*':
+					search = '%' + search + '%'
+
 				if not 0 < len(search) <= 20:
 					shell.print_red('\nFile name must be between 1 and 20 chars long.\n')
 					continue
