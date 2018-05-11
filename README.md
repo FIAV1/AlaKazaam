@@ -4,6 +4,27 @@
 
 A peer-to-peer server based on Kazaa's approach:
 
+> ### Smart Query flooding
+> **Hierarchic**
+>   * Super-nodes managing their peers
+>   * On startup, the client contacts a super-node (and may later become one)
+>   * Publish: client sends list of files to its super-node
+>   * Search: send query to super-node, and the super- nodes flood queries among themselves
+>   * Fetch: get file directly from peer(s); can fetch from multiple peers at once
+>
+> ### Functioning
+>   * Each peer is either a group leader or assigned to a group leader
+>   * Group leader tracks the content in all its children
+>
+> ### Motivation for super-nodes
+>   * Query consolidation
+>      ** Many connected nodes may have only a few files
+>      ** Propagating query to a sub-node may take more time than for the super-node to answer itself
+>   * Stability
+>      ** Super-node selection favors nodes with high up-time
+>      ** How long you’ve been on is a good predictor of how long you’ll be around in the future
+>
+
 ## Usage
 ```shell
 python3 AlaKazaam.py
@@ -27,8 +48,11 @@ ALGI[4B].SessionID[16B]
 
 # Add a file
 ADFF[4B].SessionID[16B].Filemd5[32B].Filename[100B]
-# Response will be
+# No response from the server
+
+# Remove a file
 DEFF[4B].SessionID[16B].Filemd5[32B]
+# No response from the server
 
 # Logout
 LOGO[4B].SessionID[16B]
