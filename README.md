@@ -1,4 +1,4 @@
-# AlaKazaam :warning: WIP :warning:
+# AlaKazaam:
 
 :books: Reti Peer To Peer - Università degli Studi di Ferrara :books:
 
