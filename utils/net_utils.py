@@ -8,8 +8,8 @@ from peer.LocalData import LocalData
 from utils import shell_colors
 
 config = {
-	'ipv4': '',
-	'ipv6': '',
+	'ipv4': '172.16.1.1',
+	'ipv6': 'fc00::1:1',
 	'network_port': 3000,
 	'aque_port': 4000,
 	'asup_port': 5000
@@ -42,14 +42,19 @@ def send_packet(ip4_peer: str, ip6_peer: str, port_peer: int, packet: str) -> so
 		:param packet: packet to be sent
 		:return: None
 	"""
-	(sock, version) = create_socket()
+	try:
+		(sock, version) = create_socket()
 
-	if version == 4:
-		sock.connect((ip4_peer, port_peer))
-	else:
-		sock.connect((ip6_peer, port_peer))
+		if version == 4:
+			sock.connect((ip4_peer, port_peer))
+		else:
+			sock.connect((ip6_peer, port_peer))
 
-	sock.send(packet.encode())
+		sock.send(packet.encode())
+
+	except socket.error:
+		sock = None
+
 	return sock
 
 	# self.log.write_blue(f'Sending {ip4_peer}|{ip6_peer} [{port_peer}] -> ', end='')
@@ -161,6 +166,7 @@ def prompt_parameters_request() -> None:
 				break
 			except ipaddress.AddressValueError:
 				shell_colors.print_red(f'\n{get_local_ipv4()} is not a valid IPv4 address, please reinsert it.\n')
+				set_local_ipv4('')
 				continue
 
 	while True:
@@ -179,6 +185,7 @@ def prompt_parameters_request() -> None:
 				break
 			except ipaddress.AddressValueError as e:
 				shell_colors.print_red(f'\n{get_local_ipv6()} is not a valid IPv6 address, please reinsert it.\n')
+				set_local_ipv6('')
 				continue
 
 

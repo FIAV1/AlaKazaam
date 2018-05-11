@@ -140,7 +140,7 @@ def get_files_count_by_querystring(conn: database.sqlite3.Connection, query: str
 	if row is None:
 		return 0
 
-	return row['num']
+	return int(row['num'])
 
 
 def get_files_with_copy_amount_by_querystring(conn: database.sqlite3.Connection, query: str) -> list:
@@ -157,7 +157,7 @@ def get_files_with_copy_amount_by_querystring(conn: database.sqlite3.Connection,
 	if query == '*':
 		c.execute(
 			'SELECT f.file_md5, f.file_name, COUNT(f_p.file_md5) AS copies '
-			'FROM files AS f NATURAL JOIN files_peers AS f_p '		
+			'FROM files AS f NATURAL JOIN files_peers AS f_p '
 			'GROUP BY f_p.file_md5',
 		)
 	else:

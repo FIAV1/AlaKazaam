@@ -13,7 +13,7 @@ class Downloader:
 		self.host_ip6 = host_ip6
 		self.host_port = host_port
 		self.packet = packet
-		self.file_name = file_name
+		self.file_name = file_name.lstrip().rstrip()
 
 	def __create_socket(self) -> (socket.socket, int):
 		""" Create the active socket

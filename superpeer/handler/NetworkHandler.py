@@ -14,6 +14,7 @@ from superpeer.model import peer_repository
 from superpeer.model import file_repository
 from common.ServerThread import ServerThread
 from .NetworkTimedResponseHandler import NetworkTimedResponseHandler
+from utils.Uploader import Uploader
 
 
 class NetworkHandler(HandlerInterface):
@@ -366,7 +367,7 @@ class NetworkHandler(HandlerInterface):
 				return
 
 			# check in my shared files
-			for shared_file in LocalData.get_shared_files():
+			for shared_file in LocalData.search_in_shared_files(query.strip('%')):
 				LocalData.add_net_peer_file(
 					net_utils.get_local_ip_for_response(),
 					net_utils.get_network_port(),
@@ -483,6 +484,8 @@ class NetworkHandler(HandlerInterface):
 				self.log.write_red(f'Invalid packet received: {packet}\nUnable to reply.')
 				return
 
+			self.log.write(f'{packet}')
+
 			pktid = packet[4:20]
 			ip_peer = packet[20:75]
 			ip4_peer, ip6_peer = net_utils.get_ip_pair(ip_peer)
@@ -500,45 +503,98 @@ class NetworkHandler(HandlerInterface):
 				self.log.write_red(f'An error has occurred while trying to serve the request: {e}')
 				return
 
+			# check in my peers files (DB)
 			try:
 				total_file = file_repository.get_files_count_by_querystring(conn, query)
-				if total_file == 0:
+				if total_file != 0:
+
+					file_rows = file_repository.get_files_by_querystring(conn, query)
+
+					for file_row in file_rows:
+						file_md5 = file_row['file_md5']
+						file_name = file_row['file_name']
+
+						owner_rows = peer_repository.get_peers_by_file(conn, file_md5)
+
+						for owner_row in owner_rows:
+							owner_ip = owner_row['ip']
+							owner_port = owner_row['port']
+
+							response = "AQUE" + pktid + owner_ip + owner_port + file_md5 + file_name.ljust(100)
+
+							try:
+								net_utils.send_packet_and_close(ip4_peer, ip6_peer, port_peer, response)
+								self.log.write_blue(f'Sending {ip4_peer}|{ip6_peer} [{port_peer}] -> ', end='')
+								self.log.write(f'{response}')
+							except socket.error as e:
+								self.log.write_red(f'An error has occurred while sending {response}: {e}')
+					conn.commit()
 					conn.close()
-					return
-
-				file_rows = file_repository.get_files_by_querystring(conn, query)
-
-				for file_row in file_rows:
-					file_md5 = file_row['file_md5']
-					file_name = file_row['file_name']
-
-					owner_rows = peer_repository.get_peers_by_file(conn, file_md5)
-
-					for owner_row in owner_rows:
-						owner_ip = owner_row['ip']
-						owner_port = owner_row['port']
-
-						response = "AQUE" + pktid + owner_ip + owner_port + file_md5 + file_name.ljust(100)
-
-						try:
-							net_utils.send_packet_and_close(ip4_peer, ip6_peer, port_peer, response)
-							self.log.write_blue(f'Sending {ip4_peer}|{ip6_peer} [{port_peer}] -> ', end='')
-							self.log.write(f'{response}')
-						except socket.error as e:
-							self.log.write_red(f'An error has occurred while sending {response}: {e}')
-				conn.commit()
-				conn.close()
+				else:
+					conn.close()
 			except database.Error as e:
 				conn.rollback()
 				conn.close()
 				self.log.write_red(f'An error has occurred while trying to serve the request: {e}')
 				return
 
+			# check in my shared files
+			for local_shared_file in LocalData.search_in_shared_files(query.strip('%')):
+				local_ip = net_utils.get_local_ip_for_response()
+				local_port = str(net_utils.get_network_port()).zfill(5)
+				file_md5 = LocalData.get_shared_filemd5(local_shared_file)
+				file_name = LocalData.get_shared_filename(local_shared_file).ljust(100)
+				response = "AQUE" + pktid + local_ip + local_port + file_md5 + file_name
+
+				try:
+					net_utils.send_packet_and_close(ip4_peer, ip6_peer, port_peer, response)
+					self.log.write_blue(f'Sending {ip4_peer}|{ip6_peer} [{port_peer}] -> ', end='')
+					self.log.write(f'{response}')
+				except socket.error as e:
+					self.log.write_red(f'An error has occurred while sending {response}: {e}')
+
 			# forwarding the packet to other superpeers
 			self.__forward_packet(socket_ip_sender, ip_peer, ttl, packet)
 
 		elif command == "RETR":
-			pass
+			if len(packet) != 36:
+				self.log.write_blue('Sending -> ', end='')
+				self.log.write('Invalid packet. Unable to reply.')
+				sd.send('Invalid packet. Unable to reply.'.encode())
+				sd.close()
+				return
+
+			file_md5 = packet[4:36]
+
+			file_name = LocalData.get_shared_filename_by_filemd5(file_md5)
+
+			if file_name is None:
+				self.log.write_blue('Sending -> ', end='')
+				self.log.write('Sorry, the requested file is not available anymore by the selected peer.')
+				sd.send('Sorry, the requested file is not available anymore by the selected peer.'.encode())
+				sd.close()
+				return
+
+			try:
+				f_obj = open('shared/' + file_name, 'rb')
+			except OSError as e:
+				self.log.write_red(f'Cannot open the file to upload: {e}')
+				self.log.write_blue('Sending -> ', end='')
+				self.log.write('Sorry, the peer encountered a problem while serving your packet.')
+				sd.send('Sorry, the peer encountered a problem while serving your packet.'.encode())
+				sd.close()
+				return
+
+			try:
+				Uploader(sd, f_obj, self.log).start()
+				self.log.write_blue(f'Sent {sd.getpeername()[0]} [{sd.getpeername()[1]}] -> ', end='')
+				self.log.write(f'{file_name}')
+				sd.close()
+
+			except OSError as e:
+				self.log.write_red(f'Error while sending the file: {e}')
+				sd.close()
+				return
 
 		else:
 			sd.close()

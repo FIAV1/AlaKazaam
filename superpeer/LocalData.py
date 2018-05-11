@@ -149,7 +149,7 @@ class LocalData:
 
 	@classmethod
 	def exist_menu_peer_file(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> bool:
-		return (ip4_peer, ip6_peer, port_peer, filemd5, filename) in cls.peer_files
+		return (ip4_peer, ip6_peer, port_peer, filemd5, filename) in cls.menu_peer_files
 
 	@classmethod
 	def menu_peer_file_index(cls, ip4_peer: str, ip6_peer: str, port_peer: int, filemd5: str, filename: str) -> int:
@@ -227,7 +227,7 @@ class LocalData:
 
 	@classmethod
 	def add_shared_file(cls, filename: str, file_md5: str, file_size: int) -> None:
-		cls.shared_files.append((filename.lower(), file_md5, file_size))
+		cls.shared_files.append((filename, file_md5, file_size))
 
 	@classmethod
 	def exist_shared_file(cls, filename: str, file_md5: str, file_size: int) -> bool:
@@ -236,9 +236,12 @@ class LocalData:
 	@classmethod
 	def search_in_shared_files(cls, query_name: str) -> list:
 		results = list()
-		for file in cls.shared_files:
-			if re.search(query_name, file[0]):
-				results.append(file)
+		if query_name == '*':
+			results = cls.shared_files
+		else:
+			for file in cls.shared_files:
+				if re.search(query_name, file[0]):
+					results.append(file)
 		return results
 
 	@classmethod

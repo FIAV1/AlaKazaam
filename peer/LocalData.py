@@ -83,12 +83,19 @@ class LocalData:
 		return json.load(open(cls.json_file))["files"]
 
 	@classmethod
+	def get_shared_file_name(cls, file: tuple) -> str:
+		return file[1]
+
+	@classmethod
 	def get_shared_file_md5(cls, file: tuple) -> str:
 		return file[0]
 
 	@classmethod
-	def get_shared_file_name(cls, file: tuple) -> str:
-		return file[1]
+	def get_shared_file_name_from_md5(cls, file_md5: str) -> str:
+		shared_files = cls.get_shared_files()
+		for file in shared_files:
+			if cls.get_shared_file_md5(file) == file_md5:
+				return cls.get_shared_file_name(file)
 
 	@classmethod
 	def add_shared_file(cls, file_md5: str, file_name: str) -> None:
@@ -115,9 +122,10 @@ class LocalData:
 		json.dump(data, open("peer/data.json", "w"))
 
 	@classmethod
-	def clear_shared_files(cls) -> None:
+	def clear_backup_data(cls) -> None:
 		data = {"files": [], "superpeer": []}
 		json.dump(data, open("peer/data.json", "w"))
+		cls.superpeer = tuple()
 	# ------------------------------------------------------------------------------
 
 	#  received packets management --------------------------------------------------
